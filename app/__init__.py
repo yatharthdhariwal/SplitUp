@@ -17,6 +17,9 @@ def create_app():
     jwt.init_app(app)
 
     with app.app_context():
-        from app.models import User  # noqa: F401 - import needed so Alembic detects models
+        from app.models import User  # noqa: F401
+
+    from app.routes import auth_bp
+    app.register_blueprint(auth_bp)
 
     return app
