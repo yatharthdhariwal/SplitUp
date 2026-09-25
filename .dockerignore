@@ -1,0 +1,20 @@
+# Files to exclude from the Docker build context.
+# Smaller context = faster builds and smaller images.
+
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+htmlcov/
+.coverage
+.env
+*.db
+*.sqlite3
+.git/
+.gitignore
+tests/
+README.md
+*.md
+.DS_Store
+Thumbs.db

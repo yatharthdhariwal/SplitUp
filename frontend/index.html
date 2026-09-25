@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SettleUp — Split bills, stay friends</title>
+  <meta name="description" content="The easiest way to split bills with friends. Track expenses, settle debts, and never argue about money again." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <link rel="stylesheet" href="css/auth.css" />
+</head>
+<body>
+
+<!-- ── Animated Background ──────────────────────────────── -->
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+
+<!-- ── Floating Shapes ───────────────────────────────────── -->
+<div class="floating-shapes" id="shapes"></div>
+
+<!-- ── Toast Container ───────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Theme Toggle (floating) ──────────────────────────── -->
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode" aria-label="Toggle dark mode"
+        style="position:fixed;top:20px;right:20px;z-index:100">
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+
+<!-- ── Main Content ──────────────────────────────────────── -->
+<main class="auth-page" style="position:relative;z-index:1">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      Open Source · Free Forever · No Ads
+    </div>
+    <h1 class="hero-title">
+      Split bills.<br>
+      <span class="gradient-text">Settle debts.</span><br>
+      Stay friends.
+    </h1>
+    <p class="hero-sub">
+      Track shared expenses effortlessly. SettleUp does the math so you don't have to.
+    </p>
+    <div class="hero-features">
+      <div class="hero-feature"><span>✓</span> Equal, exact & % splits</div>
+      <div class="hero-feature"><span>✓</span> Debt simplification</div>
+      <div class="hero-feature"><span>✓</span> Instant settlements</div>
+      <div class="hero-feature"><span>✓</span> No floating-point errors</div>
+    </div>
+  </div>
+
+  <!-- Auth Card -->
+  <div class="auth-card">
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <!-- Login Form -->
+    <form class="auth-form" id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="login-password" placeholder="••••••••" required />
+      </div>
+      <div id="login-error" class="form-error"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+        Sign In →
+      </button>
+    </form>
+
+    <!-- Register Form -->
+    <form class="auth-form" id="register-form" style="display:none" onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="reg-name" placeholder="Alice Smith" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="reg-email" placeholder="you@example.com" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="reg-password" placeholder="Min 6 characters" required minlength="6" />
+      </div>
+      <div id="reg-error" class="form-error"></div>
+      <button type="submit" class="btn btn-primary btn-full" id="reg-btn">
+        Create Account →
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      By continuing, you agree to our open-source MIT license.
+    </div>
+  </div>
+
+</main>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  // Redirect if already logged in
+  requireGuest();
+
+  // ── Tab Switching ──────────────────────────────────────
+  function switchTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('login-form').style.display    = isLogin ? 'flex' : 'none';
+    document.getElementById('register-form').style.display = isLogin ? 'none' : 'flex';
+    document.getElementById('tab-login').classList.toggle('active', isLogin);
+    document.getElementById('tab-register').classList.toggle('active', !isLogin);
+  }
+
+  // ── Login Handler ──────────────────────────────────────
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    const errEl = document.getElementById('login-error');
+    errEl.classList.remove('show');
+    setLoading(btn, true);
+
+    try {
+      const email    = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const data = await API.Auth.login(email, password);
+      saveSession(data.access_token, data.user);
+      toast('Welcome back! 👋', 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 600);
+    } catch (err) {
+      errEl.textContent = err.error || 'Login failed. Check your credentials.';
+      errEl.classList.add('show');
+      setLoading(btn, false);
+    }
+  }
+
+  // ── Register Handler ───────────────────────────────────
+  async function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('reg-btn');
+    const errEl = document.getElementById('reg-error');
+    errEl.classList.remove('show');
+    setLoading(btn, true);
+
+    try {
+      const name     = document.getElementById('reg-name').value.trim();
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const data = await API.Auth.register(name, email, password);
+      toast('Account created! Signing you in...', 'success');
+      // Auto-login after register
+      const loginData = await API.Auth.login(email, password);
+      saveSession(loginData.access_token, loginData.user);
+      setTimeout(() => window.location.href = 'dashboard.html', 600);
+    } catch (err) {
+      errEl.textContent = err.error || 'Registration failed. Try a different email.';
+      errEl.classList.add('show');
+      setLoading(btn, false);
+    }
+  }
+
+  // ── Floating Shapes (decorative) ──────────────────────
+  const shapesContainer = document.getElementById('shapes');
+  for (let i = 0; i < 8; i++) {
+    const el = document.createElement('div');
+    const size = 20 + Math.random() * 40;
+    el.className = 'shape';
+    el.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random() * 100}%;
+      animation-duration:${8 + Math.random() * 10}s;
+      animation-delay:${Math.random() * 8}s;
+      border-radius:${Math.random() > 0.5 ? '50%' : '8px'};
+    `;
+    shapesContainer.appendChild(el);
+  }
+</script>
+</body>
+</html>

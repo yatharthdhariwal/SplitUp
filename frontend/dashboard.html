@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — SettleUp</title>
+  <meta name="description" content="Your groups and expense overview on SettleUp." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Navbar -->
+<div id="navbar-container"></div>
+
+<!-- ── Create Group Modal ───────────────────────────────── -->
+<div class="modal-overlay" id="create-group-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">✨ New Group</h2>
+      <button class="modal-close" onclick="closeModal('create-group-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Group Name</label>
+        <input type="text" class="form-input" id="group-name-input"
+               placeholder="e.g. Goa Trip 2025, Flatmates, Office Lunch…" />
+      </div>
+      <p style="font-size:0.82rem;color:var(--text-muted)">
+        💡 You'll automatically be added as the first member. You can invite others after creating.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('create-group-modal')">Cancel</button>
+      <button class="btn btn-primary" id="create-group-btn" onclick="createGroup()">Create Group →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Member Modal ──────────────────────────────────── -->
+<div class="modal-overlay" id="add-member-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">👥 Add Member</h2>
+      <button class="modal-close" onclick="closeModal('add-member-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.88rem;color:var(--text-secondary);margin-bottom:12px">
+        Adding to: <strong id="adding-to-group-name" style="color:var(--text-primary)"></strong>
+      </p>
+      
+      <div class="form-group">
+        <label class="form-label">Member Name (optional)</label>
+        <input type="text" class="form-input" id="member-name-input"
+               placeholder="e.g. Rahul Sharma" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Member Email</label>
+        <input type="email" class="form-input" id="member-email-input"
+               placeholder="e.g. rahul@example.com" />
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">
+          💡 If they don't have an account yet, they will be automatically invited and added!
+        </p>
+        <span class="form-error" id="member-error"></span>
+      </div>
+
+      <div id="quick-users-container" style="margin-top:12px;display:none">
+        <label class="form-label" style="font-size:0.75rem">⚡ Quick Add Existing User</label>
+        <div id="quick-users-list" style="display:flex;flex-wrap:wrap;gap:6px;max-height:100px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-member-modal')">Done</button>
+      <button class="btn btn-primary" id="add-member-btn" onclick="addMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Page Content ──────────────────────────────────────── -->
+<div class="page-container" style="position:relative;z-index:1">
+
+  <!-- Summary Stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px" id="stats-row">
+    <div class="skeleton" style="height:100px"></div>
+    <div class="skeleton" style="height:100px"></div>
+    <div class="skeleton" style="height:100px"></div>
+  </div>
+
+  <!-- Groups Header -->
+  <div class="section-header">
+    <span class="section-title">Your Groups</span>
+    <button class="btn btn-primary btn-sm" onclick="openModal('create-group-modal')">
+      + New Group
+    </button>
+  </div>
+
+  <!-- Groups Grid -->
+  <div class="groups-grid" id="groups-grid">
+    <div class="skeleton" style="height:160px"></div>
+    <div class="skeleton" style="height:160px"></div>
+    <div class="skeleton" style="height:160px"></div>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  if (!requireAuth()) throw new Error('Not authenticated');
+
+  // ── Render Navbar ──────────────────────────────────────
+  document.getElementById('navbar-container').innerHTML = renderNavbar();
+
+  // ── State ──────────────────────────────────────────────
+  let groups = [];
+  let groupBalances = {};   // groupId → { totalOwed, totalOwe }
+  let currentAddMemberGroupId = null;
+
+  // ── Load Dashboard ─────────────────────────────────────
+  async function loadDashboard() {
+    try {
+      const data = await API.Groups.list();
+      groups = data.groups || [];
+      await loadAllBalances();
+      renderStats();
+      renderGroups();
+    } catch (err) {
+      toast(err.error || 'Failed to load dashboard', 'error');
+      document.getElementById('groups-grid').innerHTML =
+        '<p style="color:var(--text-muted);grid-column:1/-1">Could not load groups. Is the Flask API running?</p>';
+      document.getElementById('stats-row').innerHTML = '';
+    }
+  }
+
+  // ── Load Balances for All Groups ───────────────────────
+  async function loadAllBalances() {
+    const currentUser = getUser();
+    await Promise.all(groups.map(async (g) => {
+      try {
+        const data = await API.Balances.get(g.id);
+        const myBal = data.balances.find(b => b.user_id === currentUser.id);
+        groupBalances[g.id] = parseFloat(myBal?.balance || 0);
+      } catch {
+        groupBalances[g.id] = 0;
+      }
+    }));
+  }
+
+  // ── Render Stats ───────────────────────────────────────
+  function renderStats() {
+    const values = Object.values(groupBalances);
+    const totalOwed = values.filter(v => v > 0).reduce((s, v) => s + v, 0);
+    const totalOwe  = values.filter(v => v < 0).reduce((s, v) => s + Math.abs(v), 0);
+    const net = totalOwed - totalOwe;
+
+    document.getElementById('stats-row').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">You Are Owed</div>
+        <div class="stat-value positive">${formatCurrency(totalOwed)}</div>
+        <div class="stat-sub">Across ${groups.length} group${groups.length !== 1 ? 's' : ''}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">You Owe</div>
+        <div class="stat-value negative">${formatCurrency(totalOwe)}</div>
+        <div class="stat-sub">Total outstanding debts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Balance</div>
+        <div class="stat-value ${net >= 0 ? 'positive' : 'negative'}">${net >= 0 ? '+' : ''}${formatCurrency(net)}</div>
+        <div class="stat-sub">${net >= 0 ? 'Overall you\'re ahead 🎉' : 'Overall you owe money 💸'}</div>
+      </div>`;
+  }
+
+  // ── Render Groups Grid ─────────────────────────────────
+  function renderGroups() {
+    const grid = document.getElementById('groups-grid');
+    if (!groups.length) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">🏝️</div>
+          <p>No groups yet. Create one and invite your friends!</p>
+        </div>`;
+      return;
+    }
+
+    const EMOJIS = ['🏖️','🍕','🏔️','🎉','🚗','🏠','✈️','🍜','🎸','⛺','🎭','🌴'];
+    grid.innerHTML = groups.map((g, i) => {
+      const bal = groupBalances[g.id] || 0;
+      const balClass = bal > 0 ? 'positive' : bal < 0 ? 'negative' : 'settled';
+      const balText = bal > 0
+        ? `You're owed ${formatCurrency(bal)}`
+        : bal < 0
+          ? `You owe ${formatCurrency(Math.abs(bal))}`
+          : 'All settled ✓';
+      const emoji = EMOJIS[i % EMOJIS.length];
+      const members = g.member_count || g.members?.length || '?';
+
+      return `
+        <div class="group-card" onclick="goToGroup(${g.id})">
+          <div class="group-icon">${emoji}</div>
+          <div class="group-name">${g.name}</div>
+          <div class="group-meta">👥 ${members} member${members !== 1 ? 's' : ''}</div>
+          <div class="group-balance ${balClass}">${balText}</div>
+          <div style="display:flex;gap:8px;margin-top:14px" onclick="event.stopPropagation()">
+            <button class="btn btn-ghost btn-sm" onclick="openAddMember(${g.id},'${g.name}')">
+              + Member
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="goToGroup(${g.id})">
+              View →
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Navigation ─────────────────────────────────────────
+  function goToGroup(groupId) {
+    window.location.href = `group.html?id=${groupId}`;
+  }
+
+  // ── Create Group ───────────────────────────────────────
+  async function createGroup() {
+    const input = document.getElementById('group-name-input');
+    const btn = document.getElementById('create-group-btn');
+    const name = input.value.trim();
+    if (!name) { toast('Enter a group name', 'error'); return; }
+
+    setLoading(btn, true);
+    try {
+      const data = await API.Groups.create(name);
+      closeModal('create-group-modal');
+      input.value = '';
+      toast(`"${name}" created! 🎉`, 'success');
+      await loadDashboard();
+    } catch (err) {
+      toast(err.error || 'Failed to create group', 'error');
+    }
+    setLoading(btn, false);
+  }
+
+  // Allow pressing Enter in group name input
+  document.getElementById('group-name-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createGroup();
+  });
+
+  // ── Add Member ─────────────────────────────────────────
+  async function openAddMember(groupId, groupName) {
+    currentAddMemberGroupId = groupId;
+    document.getElementById('adding-to-group-name').textContent = groupName;
+    const emailInput = document.getElementById('member-email-input');
+    const nameInput = document.getElementById('member-name-input');
+    if (emailInput) emailInput.value = '';
+    if (nameInput) nameInput.value = '';
+    document.getElementById('member-error').classList.remove('show');
+    openModal('add-member-modal');
+
+    // Fetch registered users for quick-add list
+    try {
+      const data = await API.Groups.listUsers();
+      const container = document.getElementById('quick-users-container');
+      const listEl = document.getElementById('quick-users-list');
+      if (data && data.users && data.users.length > 0) {
+        listEl.innerHTML = data.users.map(u => `
+          <button type="button" class="badge" style="cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text-secondary);font-size:0.75rem;padding:4px 8px"
+                  onclick="selectQuickUser('${escapeHtml(u.name)}', '${escapeHtml(u.email)}')">
+            + ${escapeHtml(u.name)} (${escapeHtml(u.email)})
+          </button>
+        `).join('');
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    } catch (e) {
+      console.warn('Could not load user suggestions', e);
+    }
+  }
+
+  function selectQuickUser(name, email) {
+    document.getElementById('member-name-input').value = name;
+    document.getElementById('member-email-input').value = email;
+    document.getElementById('member-error').classList.remove('show');
+  }
+
+  async function addMember() {
+    const emailInput = document.getElementById('member-email-input');
+    const nameInput  = document.getElementById('member-name-input');
+    const errEl      = document.getElementById('member-error');
+    const btn        = document.getElementById('add-member-btn');
+    const email      = emailInput.value.trim();
+    const name       = nameInput ? nameInput.value.trim() : '';
+
+    if (!email && !name) {
+      errEl.textContent = 'Please enter an email or name';
+      errEl.classList.add('show');
+      toast('Enter an email or name', 'error');
+      return;
+    }
+
+    errEl.classList.remove('show');
+    setLoading(btn, true);
+    try {
+      const res = await API.Groups.addMember(currentAddMemberGroupId, email, name, true);
+      toast(res.message || `${name || email} added to the group ✓`, 'success');
+      emailInput.value = '';
+      if (nameInput) nameInput.value = '';
+      await loadDashboard();
+      setTimeout(() => closeModal('add-member-modal'), 400);
+    } catch (err) {
+      errEl.textContent = err.error || 'Could not add member';
+      errEl.classList.add('show');
+    }
+    setLoading(btn, false);
+  }
+
+  document.getElementById('member-email-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addMember();
+  });
+  if (document.getElementById('member-name-input')) {
+    document.getElementById('member-name-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addMember();
+    });
+  }
+
+  // ── Init ───────────────────────────────────────────────
+  loadDashboard();
+</script>
+</body>
+</html>

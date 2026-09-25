@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Group — SettleUp</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <style>
+    .page-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px;
+      margin-bottom: 24px; flex-wrap: wrap;
+    }
+    .group-title-section h1 { font-size: 1.85rem; font-weight: 800; letter-spacing: -0.03em; }
+    .group-title-section .sub { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+    .page-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Personal Hero Card */
+    .balance-hero-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 24px; border-radius: var(--radius-lg);
+      margin-bottom: 24px; backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      flex-wrap: wrap; gap: 16px;
+    }
+    .balance-hero-card.is-owed {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(6,182,212,0.06) 100%);
+      border-color: rgba(16,185,129,0.3);
+    }
+    .balance-hero-card.is-owe {
+      background: linear-gradient(135deg, rgba(244,63,94,0.12) 0%, rgba(245,158,11,0.06) 100%);
+      border-color: rgba(244,63,94,0.3);
+    }
+    .balance-hero-card.is-settled {
+      background: rgba(255,255,255,0.03);
+      border-color: var(--border);
+    }
+    .hero-stat-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+    .hero-stat-value { font-size: 1.7rem; font-weight: 800; margin-top: 2px; }
+
+    /* Activity Feed Item */
+    .activity-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 18px; border-radius: var(--radius-md);
+      background: var(--bg-card); border: 1px solid var(--border);
+      margin-bottom: 10px; transition: var(--transition);
+      cursor: pointer;
+    }
+    .activity-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateY(-1px);
+    }
+    .activity-icon-box {
+      width: 44px; height: 44px; border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .activity-main { flex: 1; min-width: 0; }
+    .activity-title { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .activity-sub { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; display: flex; gap: 8px; align-items: center; }
+    .activity-amount-box { text-align: right; flex-shrink: 0; }
+    .activity-total { font-size: 0.75rem; color: var(--text-muted); }
+    .activity-user-share { font-size: 0.95rem; font-weight: 700; }
+    .activity-user-share.positive { color: var(--green); }
+    .activity-user-share.negative { color: var(--red); }
+    .activity-user-share.neutral { color: var(--text-muted); }
+
+    /* Debt Item in Sidebar */
+    .suggested-debt-card {
+      padding: 14px 16px; border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+      margin-bottom: 10px; transition: var(--transition);
+    }
+    .suggested-debt-card:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(139,92,246,0.3);
+    }
+    .debt-flow-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px; font-size: 0.85rem;
+    }
+    .debt-flow-names { display: flex; align-items: center; gap: 6px; }
+
+    /* Paid-by Chips in Add Expense */
+    .chip-selector-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .chip-selector-item {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: var(--radius-full);
+      border: 1px solid var(--border); background: var(--bg-card);
+      font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+      cursor: pointer; transition: var(--transition);
+    }
+    .chip-selector-item:hover { border-color: rgba(139,92,246,0.4); color: var(--text-primary); }
+    .chip-selector-item.active {
+      border-color: var(--purple); background: rgba(139,92,246,0.15);
+      color: #fff; font-weight: 600;
+    }
+
+    /* Split With Member Checkboxes */
+    .split-members-list {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+    }
+    .split-member-toggle {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+      border-radius: var(--radius-md); border: 1px solid var(--border);
+      background: var(--bg-card); cursor: pointer; font-size: 0.82rem;
+      transition: var(--transition);
+    }
+    .split-member-toggle input { accent-color: var(--purple); }
+    .split-member-toggle.checked { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); color: #fff; }
+
+    /* Split Type Tabs */
+    .split-type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 4px 0; }
+    .split-type-option {
+      padding: 10px; text-align: center; border-radius: var(--radius-md);
+      border: 1px solid var(--border); background: var(--bg-card); cursor: pointer;
+      transition: var(--transition); font-size: 0.82rem; font-weight: 500; color: var(--text-secondary);
+    }
+    .split-type-option:hover { border-color: rgba(139,92,246,0.3); color: var(--text-primary); }
+    .split-type-option.selected {
+      border-color: var(--purple); background: rgba(139,92,246,0.12); color: var(--purple-light); font-weight: 600;
+    }
+    .split-type-option .split-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+
+    #custom-splits { display: none; margin-top: 10px; }
+    #custom-splits.show { display: flex; flex-direction: column; gap: 8px; }
+    .custom-split-row {
+      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);
+    }
+    .custom-split-row label { flex: 1; font-size: 0.85rem; }
+    .custom-split-row input { width: 110px; padding: 6px 10px; font-size: 0.85rem; }
+
+    /* ── Group Page Mobile ──────────────────────────────── */
+    @media (max-width: 640px) {
+      .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .group-title-section h1 { font-size: 1.35rem; }
+      .page-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .page-actions .btn { flex: 1; min-width: 0; justify-content: center; font-size: 0.8rem; }
+
+      .balance-hero-card {
+        padding: 14px 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .hero-stat-value { font-size: 1.3rem; }
+
+      .activity-card { padding: 12px 14px; gap: 10px; }
+      .activity-icon-box { width: 36px; height: 36px; font-size: 1rem; }
+      .activity-title { font-size: 0.88rem; }
+      .activity-sub { font-size: 0.72rem; }
+      .activity-user-share { font-size: 0.88rem; }
+      .activity-total { font-size: 0.7rem; }
+
+      .suggested-debt-card { padding: 12px; }
+      .debt-flow-header { flex-wrap: wrap; gap: 6px; font-size: 0.8rem; }
+      .debt-flow-names { flex-wrap: wrap; gap: 4px; }
+
+      .split-members-list { grid-template-columns: 1fr; }
+      .split-type-grid { grid-template-columns: 1fr; }
+      .split-type-option { padding: 8px; font-size: 0.78rem; }
+
+      .custom-split-row { flex-wrap: wrap; gap: 6px; padding: 8px 10px; }
+      .custom-split-row input { width: 100%; }
+
+      .chip-selector-group { gap: 6px; }
+      .chip-selector-item { padding: 5px 10px; font-size: 0.78rem; }
+    }
+
+    @media (max-width: 400px) {
+      .group-title-section h1 { font-size: 1.15rem; }
+      .hero-stat-value { font-size: 1.1rem; }
+      .page-actions .btn { font-size: 0.76rem; padding: 7px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Navbar -->
+<div id="navbar-container"></div>
+
+<!-- ── Add Expense Modal ─────────────────────────────────── -->
+<div class="modal-overlay" id="add-expense-modal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-header">
+      <h2 class="modal-title">💸 Add Expense</h2>
+      <button class="modal-close" onclick="closeModal('add-expense-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Description & Amount -->
+      <div class="form-group">
+        <label class="form-label">What was this for?</label>
+        <input type="text" class="form-input" id="exp-desc" placeholder="e.g. Dinner, Cab, Groceries, Hotel..." oninput="autoSuggestExpenseIcon()" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Total Amount (₹)</label>
+        <input type="number" class="form-input" id="exp-amount" placeholder="0.00" min="0.01" step="0.01" oninput="updateSplitCalculations()" />
+      </div>
+
+      <!-- Who Paid -->
+      <div class="form-group">
+        <label class="form-label">Who paid for this?</label>
+        <div class="chip-selector-group" id="exp-paid-by-chips"></div>
+      </div>
+
+      <!-- Split Mode Selector -->
+      <div class="form-group" style="margin-top:16px">
+        <label class="form-label">How to split?</label>
+        <div class="split-type-grid">
+          <div class="split-type-option selected" data-type="equal" onclick="selectSplitType('equal')">
+            <span class="split-icon">⚖️</span> Split Equally
+          </div>
+          <div class="split-type-option" data-type="exact" onclick="selectSplitType('exact')">
+            <span class="split-icon">💎</span> Exact Amounts
+          </div>
+          <div class="split-type-option" data-type="percentage" onclick="selectSplitType('percentage')">
+            <span class="split-icon">%</span> By Percentage
+          </div>
+        </div>
+      </div>
+
+      <!-- Equal Split: Member Selection -->
+      <div id="equal-split-members-container" class="form-group" style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label class="form-label" style="margin-bottom:0">Split between who?</label>
+          <span id="equal-split-summary" style="font-size:0.78rem;color:var(--text-muted)"></span>
+        </div>
+        <div class="split-members-list" id="equal-split-members-list"></div>
+      </div>
+
+      <!-- Custom Splits (Exact / Percentage) -->
+      <div id="custom-splits" class="form-group">
+        <label class="form-label" id="custom-splits-label">Amount per person</label>
+        <div class="split-rows" id="split-rows-container"></div>
+        <div id="split-validation-msg" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-expense-modal')">Cancel</button>
+      <button class="btn btn-primary" id="add-expense-btn" onclick="submitAddExpense()">Save Expense →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Super Simple Settle Up Modal ─────────────────────── -->
+<div class="modal-overlay" id="settlement-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h2 class="modal-title">⚡ Settle Up Payment</h2>
+      <button class="modal-close" onclick="closeModal('settlement-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 1. Direction / Mode Toggle -->
+      <div class="settle-mode-grid">
+        <button type="button" class="settle-mode-btn active" id="btn-mode-receive" onclick="setSettleMode('receive')">
+          🟢 Someone paid me
+        </button>
+        <button type="button" class="settle-mode-btn" id="btn-mode-pay" onclick="setSettleMode('pay')">
+          🔵 I paid someone
+        </button>
+      </div>
+
+      <!-- 2. Person Selector -->
+      <div class="form-group">
+        <label class="form-label" id="settle-person-label">Select Friend</label>
+        <select class="form-select" id="settle-other-user" onchange="onSettleFriendSelected()"></select>
+      </div>
+
+      <!-- 3. Visual Transfer Card -->
+      <div class="transfer-visual-card" id="transfer-visual-box">
+        <div class="transfer-avatar-box">
+          <div class="avatar" id="vis-payer-avatar">?</div>
+          <span id="vis-payer-name">Payer</span>
+        </div>
+        <div class="transfer-arrow-box">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--green)" id="vis-transfer-amount">₹0.00</div>
+          <div class="transfer-arrow-line"></div>
+          <div style="font-size:0.7rem;color:var(--text-muted)">pays</div>
+        </div>
+        <div class="transfer-avatar-box">
+          <div class="avatar" id="vis-receiver-avatar">?</div>
+          <span id="vis-receiver-name">Receiver</span>
+        </div>
+      </div>
+
+      <!-- 4. Amount Input + Quick Chips -->
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label class="form-label" style="margin-bottom:0">Payment Amount (₹)</label>
+          <span id="settle-pending-hint" style="font-size:0.78rem;color:var(--text-secondary)"></span>
+        </div>
+        <input type="number" class="form-input" id="settle-amount" placeholder="0.00" min="0.01" step="0.01" oninput="updateSettleVisual()" style="margin-top:6px" />
+        <div class="quick-amount-chips" id="settle-quick-chips"></div>
+      </div>
+
+      <!-- 5. Note -->
+      <div class="form-group">
+        <label class="form-label">Payment Method / Note (optional)</label>
+        <input type="text" class="form-input" id="settle-note" placeholder="e.g. GPay, Paytm, Cash, UPI..." />
+      </div>
+
+      <!-- Live Explanation Hint -->
+      <div id="settle-summary-hint" style="font-size:0.82rem;color:var(--text-secondary);padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:var(--radius-md);border:1px solid var(--border);line-height:1.4;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('settlement-modal')">Cancel</button>
+      <button class="btn btn-success" id="settle-btn" onclick="submitSettlement()">Confirm Payment ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add Member Modal ──────────────────────────────────── -->
+<div class="modal-overlay" id="add-member-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">👥 Add Member to Group</h2>
+      <button class="modal-close" onclick="closeModal('add-member-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Member Name (optional)</label>
+        <input type="text" class="form-input" id="group-member-name-input" placeholder="e.g. Rahul Sharma" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Member Email</label>
+        <input type="email" class="form-input" id="group-member-email-input" placeholder="e.g. rahul@example.com" />
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">
+          💡 Enter an email. If they are new to SettleUp, an account is auto-created for them!
+        </p>
+        <span class="form-error" id="group-member-error"></span>
+      </div>
+      <div id="quick-users-container-group" style="margin-top:12px;display:none">
+        <label class="form-label" style="font-size:0.75rem">⚡ Quick Add Registered User</label>
+        <div id="quick-users-list-group" style="display:flex;flex-wrap:wrap;gap:6px;max-height:100px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('add-member-modal')">Cancel</button>
+      <button class="btn btn-primary" id="group-add-member-btn" onclick="addGroupMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Page Content ──────────────────────────────────────── -->
+<div class="page-container" style="position:relative;z-index:1">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="group-title-section">
+      <h1 id="group-title"><div class="skeleton" style="width:220px;height:36px"></div></h1>
+      <div class="sub" id="group-meta"></div>
+      <div class="members-chips" id="members-chips"></div>
+    </div>
+    <div class="page-actions">
+      <button class="btn btn-ghost btn-sm" onclick="openAddGroupMemberModal()">👥 + Member</button>
+      <button class="btn btn-success btn-sm" onclick="openSmartSettlementModal()">⚡ Settle Up</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()">+ Add Expense</button>
+    </div>
+  </div>
+
+  <!-- Hero Personal Balance Card -->
+  <div id="balance-hero-container"></div>
+
+  <!-- 2-Column Group Dashboard -->
+  <div class="group-dashboard-grid">
+
+    <!-- Left Column: Activity Feed -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div class="activity-filters">
+          <button class="filter-pill active" data-filter="all" onclick="setActivityFilter('all')">All Activity</button>
+          <button class="filter-pill" data-filter="expenses" onclick="setActivityFilter('expenses')">Expenses Only</button>
+          <button class="filter-pill" data-filter="settlements" onclick="setActivityFilter('settlements')">Settlements</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openAddExpenseModal()">+ Add Expense</button>
+      </div>
+
+      <div id="activity-feed-list">
+        <div class="skeleton" style="height:74px;margin-bottom:10px"></div>
+        <div class="skeleton" style="height:74px;margin-bottom:10px"></div>
+        <div class="skeleton" style="height:74px;margin-bottom:10px"></div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar: Suggested Settlements & Balances -->
+    <div>
+      <!-- Suggested Settle Up Card -->
+      <div class="side-panel-card">
+        <div class="side-panel-title">
+          <span>⚡ Suggested Settle Up</span>
+        </div>
+        <div id="suggested-debts-list">
+          <div class="skeleton" style="height:60px"></div>
+        </div>
+      </div>
+
+      <!-- Member Balances Card -->
+      <div class="side-panel-card">
+        <div class="side-panel-title">
+          <span>👥 Group Balances</span>
+        </div>
+        <div id="side-balances-list">
+          <div class="skeleton" style="height:48px;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:48px"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  if (!requireAuth()) throw new Error('Not authenticated');
+
+  const params  = new URLSearchParams(window.location.search);
+  const groupId = parseInt(params.get('id'));
+  if (!groupId) window.location.href = 'dashboard.html';
+
+  // ── Global State ─────────────────────────────────────────
+  let groupData       = null;
+  let members         = [];
+  let rawExpenses     = [];
+  let rawSettlements  = [];
+  let rawDebts        = [];
+  let activeFilter    = 'all';
+
+  // Expense modal state
+  let selectedSplitType = 'equal';
+  let expensePaidById   = null;
+  let equalSplitMemberIds = new Set();
+
+  // Settlement modal state
+  let settleMode      = 'receive'; // 'receive' or 'pay'
+  let settleFriendId  = null;
+
+  document.getElementById('navbar-container').innerHTML = renderNavbar('Groups');
+
+  // ── Category Emoji Guesser ───────────────────────────────
+  function getExpenseEmoji(desc) {
+    const d = (desc || '').toLowerCase();
+    if (d.includes('dinner') || d.includes('lunch') || d.includes('food') || d.includes('pizza') || d.includes('burger') || d.includes('restaurant') || d.includes('barbeque') || d.includes('cafe') || d.includes('breakfast')) return '🍽️';
+    if (d.includes('coffee') || d.includes('starbucks') || d.includes('chai') || d.includes('tea')) return '☕';
+    if (d.includes('cab') || d.includes('uber') || d.includes('ola') || d.includes('taxi') || d.includes('auto') || d.includes('flight') || d.includes('petrol') || d.includes('fuel')) return '🚕';
+    if (d.includes('hotel') || d.includes('stay') || d.includes('airbnb') || d.includes('resort') || d.includes('trip') || d.includes('goa')) return '🏖️';
+    if (d.includes('grocery') || d.includes('groceries') || d.includes('zepto') || d.includes('blinkit') || d.includes('instamart') || d.includes('supermarket')) return '🛒';
+    if (d.includes('movie') || d.includes('cinema') || d.includes('netflix') || d.includes('game') || d.includes('party')) return '🎬';
+    if (d.includes('rent') || d.includes('electricity') || d.includes('wifi') || d.includes('bill') || d.includes('maid')) return '🏠';
+    return '💸';
+  }
+
+  // ── Load All Data ────────────────────────────────────────
+  async function loadAll() {
+    try {
+      const [expData, balData, debtData, setData] = await Promise.all([
+        API.Expenses.list(groupId),
+        API.Balances.get(groupId),
+        API.Balances.simplified(groupId),
+        API.Settlements.list(groupId),
+      ]);
+
+      groupData       = { name: balData.group_name };
+      members         = balData.balances || [];
+      rawExpenses     = expData.expenses || [];
+      rawDebts        = debtData.transactions || [];
+      rawSettlements  = setData.settlements || [];
+
+      document.title = `${groupData.name} — SettleUp`;
+      document.getElementById('group-title').textContent = groupData.name;
+      document.getElementById('group-meta').textContent  =
+        `👥 ${members.length} member${members.length !== 1 ? 's' : ''}`;
+
+      renderMemberChips();
+      renderHeroBalance();
+      renderActivityFeed();
+      renderSuggestedDebts();
+      renderSideBalances();
+    } catch (err) {
+      toast(err.error || 'Failed to load group data', 'error');
+    }
+  }
+
+  // ── Member Chips in Header ───────────────────────────────
+  function renderMemberChips() {
+    const chipsHtml = members.map(m => `
+      <div class="member-chip">
+        <div class="mini-avatar">${getInitials(m.name)}</div>
+        ${escapeHtml(m.name)}
+      </div>`).join('');
+
+    const addBtnHtml = `
+      <button class="member-chip" style="cursor:pointer;background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.3);color:var(--primary)" onclick="openAddGroupMemberModal()">
+        <span style="font-weight:700;margin-right:2px">+</span> Add Member
+      </button>
+    `;
+    document.getElementById('members-chips').innerHTML = chipsHtml + addBtnHtml;
+  }
+
+  // ── Personal Hero Balance ────────────────────────────────
+  function renderHeroBalance() {
+    const me = getUser();
+    const myBalObj = members.find(m => m.user_id === me.id);
+    const val = myBalObj ? parseFloat(myBalObj.balance) : 0;
+    const isOwed = val > 0.005;
+    const isOwe  = val < -0.005;
+
+    const container = document.getElementById('balance-hero-container');
+    if (isOwed) {
+      container.innerHTML = `
+        <div class="balance-hero-card is-owed">
+          <div>
+            <div class="hero-stat-label">Your Group Status</div>
+            <div class="hero-stat-value" style="color:var(--green)">
+              You are owed ${formatCurrency(val)} 🎉
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
+              Friends owe you money. When they pay, click Settle Up below!
+            </div>
+          </div>
+          <button class="btn btn-success" onclick="openSmartSettlementModal()">
+            ⚡ Settle Up Now
+          </button>
+        </div>`;
+    } else if (isOwe) {
+      container.innerHTML = `
+        <div class="balance-hero-card is-owe">
+          <div>
+            <div class="hero-stat-label">Your Group Status</div>
+            <div class="hero-stat-value" style="color:var(--red)">
+              You owe ${formatCurrency(Math.abs(val))} 💸
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">
+              You have pending payments to your friends in this group.
+            </div>
+          </div>
+          <button class="btn btn-danger" onclick="openSmartSettlementModal()">
+            ⚡ Pay & Settle Up
+          </button>
+        </div>`;
+    } else {
+      container.innerHTML = `
+        <div class="balance-hero-card is-settled">
+          <div>
+            <div class="hero-stat-label">Your Group Status</div>
+            <div class="hero-stat-value" style="color:var(--text-primary);font-size:1.4rem">
+              ✨ You are all settled up!
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:2px">
+              No outstanding debts or balances for you in this group.
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="openAddExpenseModal()">
+            + Add New Bill
+          </button>
+        </div>`;
+    }
+  }
+
+  // ── Combined Activity Feed (Expenses + Settlements) ─────
+  function setActivityFilter(filter) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.filter === filter);
+    });
+    renderActivityFeed();
+  }
+
+  function renderActivityFeed() {
+    const el = document.getElementById('activity-feed-list');
+    const me = getUser();
+
+    // Prepare unified chronological list
+    const items = [];
+
+    if (activeFilter === 'all' || activeFilter === 'expenses') {
+      rawExpenses.forEach(exp => {
+        items.push({ type: 'expense', date: new Date(exp.created_at), data: exp });
+      });
+    }
+    if (activeFilter === 'all' || activeFilter === 'settlements') {
+      rawSettlements.forEach(s => {
+        items.push({ type: 'settlement', date: new Date(s.created_at), data: s });
+      });
+    }
+
+    // Sort newest first
+    items.sort((a, b) => b.date - a.date);
+
+    if (!items.length) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">💸</div>
+          <p style="font-size:1rem;color:var(--text-secondary);font-weight:500">No activity yet in this group</p>
+          <p style="margin-top:6px">Add an expense to start tracking and splitting bills!</p>
+          <button class="btn btn-primary btn-sm" style="margin-top:16px" onclick="openAddExpenseModal()">
+            + Add First Expense
+          </button>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = items.map(item => {
+      if (item.type === 'expense') {
+        const exp = item.data;
+        const payerMember = members.find(m => m.user_id === exp.paid_by);
+        const payerName   = payerMember ? payerMember.name : 'A member';
+        const isMePayer   = me && exp.paid_by === me.id;
+
+        // Calculate my share
+        const mySplit = (exp.splits || []).find(s => s.user_id === me.id);
+        const myOwedAmt = mySplit ? parseFloat(mySplit.amount_owed) : 0;
+        const totalAmt  = parseFloat(exp.amount);
+
+        let shareHtml = '';
+        if (isMePayer) {
+          const lentAmount = totalAmt - myOwedAmt;
+          shareHtml = `
+            <div class="activity-user-share positive">+${formatCurrency(lentAmount)}</div>
+            <div class="activity-total">you lent</div>
+          `;
+        } else if (myOwedAmt > 0) {
+          shareHtml = `
+            <div class="activity-user-share negative">-${formatCurrency(myOwedAmt)}</div>
+            <div class="activity-total">your share</div>
+          `;
+        } else {
+          shareHtml = `
+            <div class="activity-user-share neutral">₹0.00</div>
+            <div class="activity-total">not involved</div>
+          `;
+        }
+
+        const emoji = getExpenseEmoji(exp.description);
+
+        return `
+          <div class="activity-card" onclick="toast('Split among ${exp.splits.length} people: Total ${formatCurrency(exp.amount)}', 'info')">
+            <div class="activity-icon-box">${emoji}</div>
+            <div class="activity-main">
+              <div class="activity-title">${escapeHtml(exp.description)}</div>
+              <div class="activity-sub">
+                <span>${isMePayer ? 'You paid' : escapeHtml(payerName) + ' paid'} <strong>${formatCurrency(exp.amount)}</strong></span>
+                <span>•</span>
+                <span>${formatDate(exp.created_at)}</span>
+              </div>
+            </div>
+            <div class="activity-amount-box">
+              ${shareHtml}
+            </div>
+          </div>`;
+      } else {
+        const s = item.data;
+        const isMePaidBy = me && s.paid_by.id === me.id;
+        const isMePaidTo = me && s.paid_to.id === me.id;
+
+        return `
+          <div class="activity-card" style="border-left:3px solid var(--green)">
+            <div class="activity-icon-box" style="background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.3)">✅</div>
+            <div class="activity-main">
+              <div class="activity-title" style="color:var(--green)">
+                ${isMePaidBy ? 'You' : escapeHtml(s.paid_by.name)} paid ${isMePaidTo ? 'You' : escapeHtml(s.paid_to.name)}
+              </div>
+              <div class="activity-sub">
+                ${s.note ? `<span>📝 ${escapeHtml(s.note)}</span> <span>•</span>` : ''}
+                <span>${formatDate(s.created_at)}</span>
+              </div>
+            </div>
+            <div class="activity-amount-box">
+              <div class="activity-user-share positive" style="font-size:1.05rem">
+                ${formatCurrency(s.amount)}
+              </div>
+              <div class="activity-total">settlement</div>
+            </div>
+          </div>`;
+      }
+    }).join('');
+  }
+
+  // ── Suggested Settle Up (Sidebar) ────────────────────────
+  function renderSuggestedDebts() {
+    const el = document.getElementById('suggested-debts-list');
+    const me = getUser();
+
+    if (!rawDebts.length) {
+      el.innerHTML = `
+        <div style="text-align:center;padding:24px 10px;color:var(--green);font-size:0.88rem;font-weight:600">
+          <span style="font-size:1.8rem;display:block;margin-bottom:6px">🎉</span>
+          All debts are settled!
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = rawDebts.map(t => {
+      const isMeFrom = me && t.from.id === me.id;
+      const isMeTo   = me && t.to.id === me.id;
+
+      return `
+        <div class="suggested-debt-card">
+          <div class="debt-flow-header">
+            <div class="debt-flow-names">
+              <strong style="color:${isMeFrom ? 'var(--red)' : 'var(--text-primary)'}">
+                ${isMeFrom ? 'You' : escapeHtml(t.from.name)}
+              </strong>
+              <span style="color:var(--text-muted)">pays</span>
+              <strong style="color:${isMeTo ? 'var(--green)' : 'var(--text-primary)'}">
+                ${isMeTo ? 'You' : escapeHtml(t.to.name)}
+              </strong>
+            </div>
+            <div style="font-weight:800;color:var(--text-primary);font-size:0.95rem">
+              ${formatCurrency(t.amount)}
+            </div>
+          </div>
+          <button class="btn btn-success btn-sm btn-full" style="padding:6px 12px;font-size:0.8rem;"
+                  onclick="openSettlementModalWithDebt(${t.from.id}, ${t.to.id}, '${t.amount}')">
+            Settle Up ${formatCurrency(t.amount)} ✓
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Group Member Balances (Sidebar) ──────────────────────
+  function renderSideBalances() {
+    const el = document.getElementById('side-balances-list');
+    const me = getUser();
+
+    el.innerHTML = members.map(m => {
+      const val = parseFloat(m.balance);
+      const isMe = me && m.user_id === me.id;
+      const cls = val > 0.005 ? 'positive' : val < -0.005 ? 'negative' : 'settled';
+      const statusLabel = val > 0.005 ? `Gets back ${formatCurrency(val)}` : val < -0.005 ? `Owes ${formatCurrency(Math.abs(val))}` : 'Settled';
+
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="mini-avatar" style="width:28px;height:28px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75rem;color:#fff">
+              ${getInitials(m.name)}
+            </div>
+            <div>
+              <div style="font-size:0.85rem;font-weight:600;color:${isMe ? 'var(--purple-light)' : 'var(--text-primary)'}">
+                ${escapeHtml(m.name)}${isMe ? ' (You)' : ''}
+              </div>
+              <div style="font-size:0.75rem;color:${val > 0.005 ? 'var(--green)' : val < -0.005 ? 'var(--red)' : 'var(--text-muted)'}">
+                ${statusLabel}
+              </div>
+            </div>
+          </div>
+          <div style="font-size:0.85rem;font-weight:700" class="${cls}">
+            ${val > 0.005 ? '+' : ''}${formatCurrency(val)}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Smart Settle Up Modal Functions ──────────────────────
+  function setSettleMode(mode) {
+    settleMode = mode;
+    document.getElementById('btn-mode-receive').classList.toggle('active', mode === 'receive');
+    document.getElementById('btn-mode-pay').classList.toggle('active', mode === 'pay');
+    populateSettleFriendsDropdown();
+  }
+
+  function openSmartSettlementModal() {
+    const me = getUser();
+    // Default mode: if someone owes me, set 'receive', else if I owe someone set 'pay'
+    const someoneOwesMe = rawDebts.find(d => d.to.id === me.id);
+    const iOweSomeone   = rawDebts.find(d => d.from.id === me.id);
+
+    if (someoneOwesMe) {
+      settleMode = 'receive';
+      settleFriendId = someoneOwesMe.from.id;
+    } else if (iOweSomeone) {
+      settleMode = 'pay';
+      settleFriendId = iOweSomeone.to.id;
+    } else {
+      settleMode = 'receive';
+      settleFriendId = null;
+    }
+
+    setSettleMode(settleMode);
+    document.getElementById('settle-note').value = '';
+    openModal('settlement-modal');
+  }
+
+  function openSettlementModalWithDebt(fromId, toId, amount) {
+    const me = getUser();
+    if (fromId === me.id) {
+      settleMode = 'pay';
+      settleFriendId = toId;
+    } else if (toId === me.id) {
+      settleMode = 'receive';
+      settleFriendId = fromId;
+    } else {
+      settleMode = 'receive';
+      settleFriendId = fromId;
+    }
+    setSettleMode(settleMode);
+    document.getElementById('settle-amount').value = amount;
+    document.getElementById('settle-note').value   = 'Settled up';
+    updateSettleVisual();
+    openModal('settlement-modal');
+  }
+
+  function populateSettleFriendsDropdown() {
+    const me = getUser();
+    const otherMembers = members.filter(m => m.user_id !== me.id);
+    const select = document.getElementById('settle-other-user');
+    const label  = document.getElementById('settle-person-label');
+
+    if (settleMode === 'receive') {
+      label.textContent = 'Who paid you?';
+    } else {
+      label.textContent = 'Who did you pay?';
+    }
+
+    if (!otherMembers.length) {
+      select.innerHTML = '<option value="">No other members in group</option>';
+      return;
+    }
+
+    select.innerHTML = otherMembers.map(m => {
+      // Look up debt relationship
+      let debtHint = '';
+      if (settleMode === 'receive') {
+        const debt = rawDebts.find(d => d.from.id === m.user_id && d.to.id === me.id);
+        if (debt) debtHint = ` (owes you ${formatCurrency(debt.amount)})`;
+      } else {
+        const debt = rawDebts.find(d => d.from.id === me.id && d.to.id === m.user_id);
+        if (debt) debtHint = ` (you owe ${formatCurrency(debt.amount)})`;
+      }
+      return `<option value="${m.user_id}">${escapeHtml(m.name)}${debtHint}</option>`;
+    }).join('');
+
+    if (settleFriendId && otherMembers.some(m => m.user_id === settleFriendId)) {
+      select.value = settleFriendId;
+    } else {
+      select.value = otherMembers[0].user_id;
+      settleFriendId = otherMembers[0].user_id;
+    }
+
+    onSettleFriendSelected();
+  }
+
+  function onSettleFriendSelected() {
+    const select = document.getElementById('settle-other-user');
+    settleFriendId = parseInt(select.value);
+    const me = getUser();
+
+    // Check if there is an exact suggested debt with this friend
+    let debtAmt = 0;
+    if (settleMode === 'receive') {
+      const debt = rawDebts.find(d => d.from.id === settleFriendId && d.to.id === me.id);
+      if (debt) debtAmt = parseFloat(debt.amount);
+    } else {
+      const debt = rawDebts.find(d => d.from.id === me.id && d.to.id === settleFriendId);
+      if (debt) debtAmt = parseFloat(debt.amount);
+    }
+
+    const amtInput = document.getElementById('settle-amount');
+    const hintEl   = document.getElementById('settle-pending-hint');
+    const chipsEl  = document.getElementById('settle-quick-chips');
+
+    if (debtAmt > 0) {
+      amtInput.value = debtAmt.toFixed(2);
+      hintEl.textContent = `Pending balance: ${formatCurrency(debtAmt)}`;
+      chipsEl.innerHTML = `
+        <button type="button" class="quick-chip" onclick="document.getElementById('settle-amount').value='${debtAmt.toFixed(2)}';updateSettleVisual();">
+          Full amount (${formatCurrency(debtAmt)})
+        </button>
+        <button type="button" class="quick-chip" onclick="document.getElementById('settle-amount').value='${(debtAmt/2).toFixed(2)}';updateSettleVisual();">
+          Half (${formatCurrency(debtAmt/2)})
+        </button>
+      `;
+    } else {
+      hintEl.textContent = '';
+      chipsEl.innerHTML  = '';
+    }
+
+    updateSettleVisual();
+  }
+
+  function updateSettleVisual() {
+    const me = getUser();
+    const otherMember = members.find(m => m.user_id === settleFriendId);
+    const otherName   = otherMember ? otherMember.name : 'Friend';
+    const amountVal   = parseFloat(document.getElementById('settle-amount').value) || 0;
+
+    let payerName, receiverName;
+    if (settleMode === 'receive') {
+      payerName    = otherName;
+      receiverName = 'You';
+      document.getElementById('vis-payer-avatar').textContent    = getInitials(otherName);
+      document.getElementById('vis-payer-name').textContent      = otherName;
+      document.getElementById('vis-receiver-avatar').textContent = getInitials(me.name);
+      document.getElementById('vis-receiver-name').textContent   = 'You';
+    } else {
+      payerName    = 'You';
+      receiverName = otherName;
+      document.getElementById('vis-payer-avatar').textContent    = getInitials(me.name);
+      document.getElementById('vis-payer-name').textContent      = 'You';
+      document.getElementById('vis-receiver-avatar').textContent = getInitials(otherName);
+      document.getElementById('vis-receiver-name').textContent   = otherName;
+    }
+
+    document.getElementById('vis-transfer-amount').textContent = formatCurrency(amountVal);
+
+    const hint = document.getElementById('settle-summary-hint');
+    if (amountVal <= 0) {
+      hint.innerHTML = 'ℹ️ Enter the amount paid to record settlement.';
+    } else if (settleMode === 'receive') {
+      hint.innerHTML = `✨ Recording that <strong>${escapeHtml(otherName)}</strong> paid you <strong>${formatCurrency(amountVal)}</strong>. This will reduce their debt to you.`;
+    } else {
+      hint.innerHTML = `✨ Recording that you paid <strong>${escapeHtml(otherName)}</strong> <strong>${formatCurrency(amountVal)}</strong>. This will clear your debt to them.`;
+    }
+  }
+
+  async function submitSettlement() {
+    const me = getUser();
+    const otherId = parseInt(document.getElementById('settle-other-user').value);
+    const amount  = parseFloat(document.getElementById('settle-amount').value);
+    const note    = document.getElementById('settle-note').value.trim();
+
+    if (!otherId) { toast('Please select a friend', 'error'); return; }
+    if (!amount || amount <= 0) { toast('Please enter a valid amount', 'error'); return; }
+
+    const paidBy = settleMode === 'receive' ? otherId : me.id;
+    const paidTo = settleMode === 'receive' ? me.id : otherId;
+
+    const btn = document.getElementById('settle-btn');
+    setLoading(btn, true);
+    try {
+      await API.Settlements.record(groupId, paidTo, amount, note || null, paidBy);
+      closeModal('settlement-modal');
+      toast('Payment recorded successfully! 🎉', 'success');
+      await loadAll();
+    } catch (err) {
+      toast(err.error || 'Failed to record payment', 'error');
+    }
+    setLoading(btn, false);
+  }
+
+  // ── Add Expense Functions ────────────────────────────────
+  function openAddExpenseModal() {
+    document.getElementById('exp-desc').value   = '';
+    document.getElementById('exp-amount').value = '';
+
+    const me = getUser();
+    expensePaidById = me.id;
+
+    // Render "Paid by" chip selector
+    const chipsEl = document.getElementById('exp-paid-by-chips');
+    chipsEl.innerHTML = members.map(m => `
+      <div class="chip-selector-item ${m.user_id === me.id ? 'active' : ''}" data-uid="${m.user_id}" onclick="selectExpensePayer(${m.user_id})">
+        <div class="mini-avatar" style="width:18px;height:18px;border-radius:50%;background:var(--gradient);font-size:0.6rem;display:flex;align-items:center;justify-content:center;color:#fff">${getInitials(m.name)}</div>
+        ${m.user_id === me.id ? 'You' : escapeHtml(m.name)}
+      </div>`).join('');
+
+    // Default: split with everyone
+    equalSplitMemberIds = new Set(members.map(m => m.user_id));
+    renderEqualSplitToggles();
+
+    selectSplitType('equal');
+    openModal('add-expense-modal');
+  }
+
+  function selectExpensePayer(uid) {
+    expensePaidById = uid;
+    document.querySelectorAll('#exp-paid-by-chips .chip-selector-item').forEach(el => {
+      el.classList.toggle('active', parseInt(el.dataset.uid) === uid);
+    });
+  }
+
+  function autoSuggestExpenseIcon() {
+    // Visual feedback could be added if needed
+  }
+
+  function renderEqualSplitToggles() {
+    const container = document.getElementById('equal-split-members-list');
+    const me = getUser();
+    container.innerHTML = members.map(m => {
+      const isChecked = equalSplitMemberIds.has(m.user_id);
+      return `
+        <label class="split-member-toggle ${isChecked ? 'checked' : ''}" id="split-toggle-${m.user_id}">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleEqualSplitMember(${m.user_id}, this.checked)" />
+          <span>${m.user_id === me.id ? 'You' : escapeHtml(m.name)}</span>
+        </label>`;
+    }).join('');
+    updateSplitCalculations();
+  }
+
+  function toggleEqualSplitMember(uid, isChecked) {
+    if (isChecked) {
+      equalSplitMemberIds.add(uid);
+    } else {
+      if (equalSplitMemberIds.size <= 1) {
+        toast('At least 1 person must share the bill', 'error');
+        document.querySelector(`#split-toggle-${uid} input`).checked = true;
+        return;
+      }
+      equalSplitMemberIds.delete(uid);
+    }
+    document.getElementById(`split-toggle-${uid}`).classList.toggle('checked', isChecked);
+    updateSplitCalculations();
+  }
+
+  function selectSplitType(type) {
+    selectedSplitType = type;
+    document.querySelectorAll('.split-type-option').forEach(el => {
+      el.classList.toggle('selected', el.dataset.type === type);
+    });
+
+    const equalContainer  = document.getElementById('equal-split-members-container');
+    const customContainer = document.getElementById('custom-splits');
+    const labelEl         = document.getElementById('custom-splits-label');
+    const rowsEl          = document.getElementById('split-rows-container');
+
+    if (type === 'equal') {
+      equalContainer.style.display = 'block';
+      customContainer.classList.remove('show');
+    } else {
+      equalContainer.style.display = 'none';
+      customContainer.classList.add('show');
+      labelEl.textContent = type === 'exact' ? 'Amount per person (₹)' : 'Percentage per person (%)';
+
+      rowsEl.innerHTML = members.map(m => `
+        <div class="custom-split-row">
+          <label>${getInitials(m.name)} ${escapeHtml(m.name)}</label>
+          <input type="number" class="form-input" data-uid="${m.user_id}"
+                 placeholder="${type === 'percentage' ? '33' : '0.00'}"
+                 min="0" step="${type === 'percentage' ? '1' : '0.01'}"
+                 oninput="updateSplitCalculations()" />
+        </div>`).join('');
+    }
+    updateSplitCalculations();
+  }
+
+  function updateSplitCalculations() {
+    const totalAmount = parseFloat(document.getElementById('exp-amount').value) || 0;
+
+    if (selectedSplitType === 'equal') {
+      const count = equalSplitMemberIds.size;
+      const perPerson = count > 0 ? (totalAmount / count) : 0;
+      document.getElementById('equal-split-summary').textContent =
+        totalAmount > 0 ? `${formatCurrency(perPerson)} / person (${count} people)` : `${count} people selected`;
+    } else {
+      const inputs = document.querySelectorAll('#split-rows-container input');
+      const totalAllocated = [...inputs].reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
+      const target = selectedSplitType === 'percentage' ? 100 : totalAmount;
+      const msg = document.getElementById('split-validation-msg');
+      const diff = Math.abs(totalAllocated - target);
+
+      if (diff < 0.01 && totalAllocated > 0) {
+        msg.style.color = 'var(--green)';
+        msg.textContent = '✓ Splits match total!';
+      } else {
+        msg.style.color = 'var(--amber)';
+        msg.textContent = selectedSplitType === 'percentage'
+          ? `${totalAllocated.toFixed(0)}% / 100% (${(100 - totalAllocated).toFixed(0)}% remaining)`
+          : `${formatCurrency(totalAllocated)} / ${formatCurrency(target)} (${formatCurrency(target - totalAllocated)} remaining)`;
+      }
+    }
+  }
+
+  async function submitAddExpense() {
+    const desc   = document.getElementById('exp-desc').value.trim();
+    const amount = parseFloat(document.getElementById('exp-amount').value);
+    const btn    = document.getElementById('add-expense-btn');
+
+    if (!desc) { toast('Please enter what this bill was for', 'error'); return; }
+    if (!amount || amount <= 0) { toast('Please enter a valid amount', 'error'); return; }
+
+    const payload = {
+      description: desc,
+      amount: amount,
+      split_type: selectedSplitType,
+      paid_by: expensePaidById
+    };
+
+    if (selectedSplitType === 'equal') {
+      payload.split_members = Array.from(equalSplitMemberIds);
+    } else {
+      const inputs = document.querySelectorAll('#split-rows-container input');
+      payload.splits = [...inputs].map(i => {
+        const val = parseFloat(i.value) || 0;
+        return selectedSplitType === 'exact'
+          ? { user_id: parseInt(i.dataset.uid), amount: val }
+          : { user_id: parseInt(i.dataset.uid), percentage: val };
+      });
+    }
+
+    setLoading(btn, true);
+    try {
+      await API.Expenses.add(groupId, payload);
+      closeModal('add-expense-modal');
+      toast('Expense added successfully! 💸', 'success');
+      await loadAll();
+    } catch (err) {
+      toast(err.error || 'Failed to add expense', 'error');
+    }
+    setLoading(btn, false);
+  }
+
+  // ── Add Group Member ─────────────────────────────────────
+  async function openAddGroupMemberModal() {
+    const emailInput = document.getElementById('group-member-email-input');
+    const nameInput  = document.getElementById('group-member-name-input');
+    const errEl      = document.getElementById('group-member-error');
+    if (emailInput) emailInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (errEl) errEl.classList.remove('show');
+    openModal('add-member-modal');
+
+    try {
+      const data = await API.Groups.listUsers();
+      const container = document.getElementById('quick-users-container-group');
+      const listEl = document.getElementById('quick-users-list-group');
+      const currentMemberIds = new Set(members.map(m => m.user_id));
+      const candidates = (data && data.users) ? data.users.filter(u => !currentMemberIds.has(u.id)) : [];
+      if (candidates.length > 0) {
+        listEl.innerHTML = candidates.map(u => `
+          <button type="button" class="badge" style="cursor:pointer;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:var(--text-secondary);font-size:0.75rem;padding:4px 8px"
+                  onclick="selectGroupQuickUser('${escapeHtml(u.name)}', '${escapeHtml(u.email)}')">
+            + ${escapeHtml(u.name)}
+          </button>
+        `).join('');
+        container.style.display = 'block';
+      } else {
+        container.style.display = 'none';
+      }
+    } catch(e) {}
+  }
+
+  function selectGroupQuickUser(name, email) {
+    document.getElementById('group-member-name-input').value  = name;
+    document.getElementById('group-member-email-input').value = email;
+  }
+
+  async function addGroupMember() {
+    const email = document.getElementById('group-member-email-input').value.trim();
+    const name  = document.getElementById('group-member-name-input').value.trim();
+    const errEl = document.getElementById('group-member-error');
+    const btn   = document.getElementById('group-add-member-btn');
+
+    if (!email) {
+      errEl.textContent = 'Please enter an email address';
+      errEl.classList.add('show');
+      return;
+    }
+    errEl.classList.remove('show');
+    setLoading(btn, true);
+    try {
+      const res = await API.Groups.addMember(groupId, email, name, true);
+      closeModal('add-member-modal');
+      toast(res.message || 'Member added! 👥', 'success');
+      await loadAll();
+    } catch (err) {
+      errEl.textContent = err.error || 'Failed to add member';
+      errEl.classList.add('show');
+    }
+    setLoading(btn, false);
+  }
+
+  // ── Init ─────────────────────────────────────────────────
+  loadAll();
+</script>
+</body>
+</html>

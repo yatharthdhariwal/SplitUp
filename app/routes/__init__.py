@@ -32,7 +32,8 @@ def register():
         'user': {
             'id': new_user.id,
             'name': new_user.name,
-            'email': new_user.email
+            'email': new_user.email,
+            'profile_picture': new_user.profile_picture
         }
     }), 201
 
@@ -60,7 +61,8 @@ def login():
         'user': {
             'id': user.id,
             'name': user.name,
-            'email': user.email
+            'email': user.email,
+            'profile_picture': user.profile_picture
         }
     }), 200
 
@@ -77,5 +79,6 @@ def get_current_user():
     return jsonify({
         'id': user.id,
         'name': user.name,
-        'email': user.email
+        'email': user.email,
+        'profile_picture': user.profile_picture
     }), 200

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — SettleUp</title>
+  <meta name="description" content="Manage your SettleUp profile, update your name, and upload a profile picture." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <style>
+    .profile-page {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .profile-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .profile-header h1 {
+      font-size: 1.6rem;
+      margin-bottom: 4px;
+    }
+    .profile-header p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* ── Avatar Section ─────────────────────────────────── */
+    .avatar-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .avatar-large {
+      position: relative;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: var(--gradient);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; font-weight: 800; color: #fff;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(22,163,74,0.2);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .avatar-large:hover {
+      box-shadow: 0 12px 40px rgba(22,163,74,0.3);
+      transform: scale(1.03);
+    }
+    .avatar-large img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .avatar-large .avatar-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      border-radius: 50%;
+    }
+    .avatar-large:hover .avatar-overlay {
+      opacity: 1;
+    }
+    .avatar-overlay svg {
+      width: 28px; height: 28px;
+      color: #fff;
+    }
+    .avatar-actions {
+      display: flex; gap: 8px;
+      margin-top: 14px;
+    }
+
+    /* ── Profile Card ───────────────────────────────────── */
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      box-shadow: var(--shadow-card);
+    }
+    .profile-card + .profile-card {
+      margin-top: 20px;
+    }
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title svg {
+      width: 16px; height: 16px;
+      color: var(--green);
+    }
+
+    /* ── Info Row ────────────────────────────────────────── */
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .info-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-align: right;
+      word-break: break-word;
+    }
+    .info-value.muted {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-style: italic;
+    }
+    .email-lock {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      margin-left: 8px;
+    }
+
+    /* ── Edit Form ──────────────────────────────────────── */
+    #edit-form { display: none; }
+    #edit-form.show { display: block; }
+    #view-info.hidden { display: none; }
+
+    .edit-form-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .edit-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    /* Hidden file input */
+    #avatar-file-input { display: none; }
+
+    /* ── Account Info Card ──────────────────────────────── */
+    .account-stat {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .account-stat:last-child { border-bottom: none; }
+    .account-stat-icon {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--green-50);
+      border: 1px solid var(--green-200);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .account-stat-info { flex: 1; }
+    .account-stat-label { font-size: 0.78rem; color: var(--text-muted); }
+    .account-stat-value { font-size: 0.92rem; font-weight: 600; color: var(--text-primary); }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .profile-card { padding: 20px 16px; }
+      .avatar-large { width: 100px; height: 100px; font-size: 2rem; }
+      .profile-header h1 { font-size: 1.3rem; }
+      .info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .edit-actions { flex-direction: column; }
+      .edit-actions .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Navbar -->
+<div id="navbar-container"></div>
+
+<!-- Hidden file input for avatar upload -->
+<input type="file" id="avatar-file-input" accept="image/png,image/jpeg,image/gif,image/webp" />
+
+<!-- ── Page Content ──────────────────────────────────────── -->
+<div class="page-container profile-page" style="position:relative;z-index:1">
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <h1>Your Profile</h1>
+    <p>Manage your personal information and profile picture</p>
+  </div>
+
+  <!-- Avatar Section -->
+  <div class="avatar-section">
+    <div class="avatar-large" id="avatar-display" onclick="document.getElementById('avatar-file-input').click()" title="Click to change profile picture">
+      <span id="avatar-initials"></span>
+      <div class="avatar-overlay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </div>
+    </div>
+    <div class="avatar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('avatar-file-input').click()">📷 Upload Photo</button>
+      <button class="btn btn-ghost btn-sm" id="remove-avatar-btn" style="display:none" onclick="removeAvatar()">🗑️ Remove</button>
+    </div>
+  </div>
+
+  <!-- Personal Info Card -->
+  <div class="profile-card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Personal Information
+    </div>
+
+    <!-- View Mode -->
+    <div id="view-info">
+      <div class="info-row">
+        <span class="info-label">Full Name</span>
+        <span class="info-value" id="display-name">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Email Address</span>
+        <span class="info-value" id="display-email">
+          —
+          <span class="email-lock">🔒 Cannot be changed</span>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Member Since</span>
+        <span class="info-value muted" id="display-joined">—</span>
+      </div>
+      <div style="margin-top:18px">
+        <button class="btn btn-primary btn-sm" onclick="showEditForm()">✏️ Edit Name</button>
+      </div>
+    </div>
+
+    <!-- Edit Mode -->
+    <div id="edit-form">
+      <div class="edit-form-inner">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" id="edit-name-input" placeholder="Enter your name" maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" id="edit-email-display" disabled
+                 style="opacity:0.6;cursor:not-allowed" />
+          <span style="font-size:0.75rem;color:var(--text-muted)">🔒 Email cannot be changed for security reasons.</span>
+        </div>
+        <div class="edit-actions">
+          <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="save-name-btn" onclick="saveName()">💾 Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Details Card -->
+  <div class="profile-card">
+    <div class="card-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Account Details
+    </div>
+    <div class="account-stat">
+      <div class="account-stat-icon">🆔</div>
+      <div class="account-stat-info">
+        <div class="account-stat-label">User ID</div>
+        <div class="account-stat-value" id="display-id">—</div>
+      </div>
+    </div>
+    <div class="account-stat">
+      <div class="account-stat-icon">📅</div>
+      <div class="account-stat-info">
+        <div class="account-stat-label">Account Created</div>
+        <div class="account-stat-value" id="display-created">—</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script>
+  if (!requireAuth()) throw new Error('Not authenticated');
+
+  // ── Render Navbar ──────────────────────────────────────
+  document.getElementById('navbar-container').innerHTML = renderNavbar('Dashboard');
+
+  // ── State ──────────────────────────────────────────────
+  let profileData = null;
+
+  // ── Load Profile ───────────────────────────────────────
+  async function loadProfile() {
+    try {
+      profileData = await API.Profile.get();
+      renderProfile();
+    } catch (err) {
+      toast(err.error || 'Failed to load profile', 'error');
+    }
+  }
+
+  // ── Render Profile ─────────────────────────────────────
+  function renderProfile() {
+    if (!profileData) return;
+
+    // Name & email
+    document.getElementById('display-name').textContent = profileData.name;
+    document.getElementById('display-email').innerHTML =
+      `${escapeHtml(profileData.email)} <span class="email-lock">🔒 Cannot be changed</span>`;
+
+    // Joined date
+    if (profileData.created_at) {
+      const d = new Date(profileData.created_at);
+      document.getElementById('display-joined').textContent =
+        d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('display-created').textContent =
+        d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) +
+        ' at ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // User ID
+    document.getElementById('display-id').textContent = `#${profileData.id}`;
+
+    // Avatar
+    const avatarEl = document.getElementById('avatar-display');
+    const initialsEl = document.getElementById('avatar-initials');
+    const removeBtn = document.getElementById('remove-avatar-btn');
+
+    if (profileData.profile_picture) {
+      const url = getAvatarUrl(profileData.profile_picture);
+      avatarEl.innerHTML = `
+        <img src="${url}?t=${Date.now()}" alt="Profile picture" />
+        <div class="avatar-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>`;
+      removeBtn.style.display = 'inline-flex';
+    } else {
+      avatarEl.innerHTML = `
+        <span>${getInitials(profileData.name)}</span>
+        <div class="avatar-overlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>`;
+      removeBtn.style.display = 'none';
+    }
+  }
+
+  // ── Edit Mode ──────────────────────────────────────────
+  function showEditForm() {
+    document.getElementById('view-info').classList.add('hidden');
+    document.getElementById('edit-form').classList.add('show');
+    document.getElementById('edit-name-input').value = profileData?.name || '';
+    document.getElementById('edit-email-display').value = profileData?.email || '';
+    document.getElementById('edit-name-input').focus();
+  }
+
+  function cancelEdit() {
+    document.getElementById('view-info').classList.remove('hidden');
+    document.getElementById('edit-form').classList.remove('show');
+  }
+
+  async function saveName() {
+    const input = document.getElementById('edit-name-input');
+    const btn = document.getElementById('save-name-btn');
+    const name = input.value.trim();
+
+    if (!name) {
+      toast('Name cannot be empty', 'error');
+      return;
+    }
+
+    setLoading(btn, true);
+    try {
+      const data = await API.Profile.update(name);
+      profileData.name = data.user.name;
+
+      // Update localStorage session so navbar refreshes everywhere
+      const storedUser = getUser();
+      storedUser.name = data.user.name;
+      localStorage.setItem('sw_user', JSON.stringify(storedUser));
+
+      cancelEdit();
+      renderProfile();
+      // Re-render navbar with updated name
+      document.getElementById('navbar-container').innerHTML = renderNavbar('Dashboard');
+      toast('Name updated! ✓', 'success');
+    } catch (err) {
+      toast(err.error || 'Failed to update name', 'error');
+    }
+    setLoading(btn, false);
+  }
+
+  // ── Avatar Upload ──────────────────────────────────────
+  document.getElementById('avatar-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Client-side validation
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      toast('File too large. Maximum 5MB allowed.', 'error');
+      return;
+    }
+
+    toast('Uploading...', 'info');
+    try {
+      const data = await API.Profile.uploadPicture(file);
+      profileData.profile_picture = data.profile_picture;
+
+      // Update localStorage session
+      const storedUser = getUser();
+      storedUser.profile_picture = data.profile_picture;
+      localStorage.setItem('sw_user', JSON.stringify(storedUser));
+
+      renderProfile();
+      // Re-render navbar with new avatar
+      document.getElementById('navbar-container').innerHTML = renderNavbar('Dashboard');
+      toast('Profile picture updated! 📸', 'success');
+    } catch (err) {
+      toast(err.error || 'Failed to upload picture', 'error');
+    }
+    // Reset the input so the same file can be re-selected
+    e.target.value = '';
+  });
+
+  async function removeAvatar() {
+    try {
+      await API.Profile.deletePicture();
+      profileData.profile_picture = null;
+
+      // Update localStorage
+      const storedUser = getUser();
+      storedUser.profile_picture = null;
+      localStorage.setItem('sw_user', JSON.stringify(storedUser));
+
+      renderProfile();
+      document.getElementById('navbar-container').innerHTML = renderNavbar('Dashboard');
+      toast('Profile picture removed', 'success');
+    } catch (err) {
+      toast(err.error || 'Failed to remove picture', 'error');
+    }
+  }
+
+  // Enter key to save
+  document.getElementById('edit-name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveName();
+    if (e.key === 'Escape') cancelEdit();
+  });
+
+  // ── Init ───────────────────────────────────────────────
+  loadProfile();
+</script>
+</body>
+</html>
