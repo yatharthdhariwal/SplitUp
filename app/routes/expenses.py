@@ -211,6 +211,194 @@ def add_expense(group_id):
 
 
 # ---------------------------------------------------------------------------
+# PUT /api/groups/<group_id>/expenses/<expense_id> — Edit an existing expense
+# ---------------------------------------------------------------------------
+@expenses_bp.route('/<int:group_id>/expenses/<int:expense_id>', methods=['PUT'])
+@jwt_required()
+def update_expense(group_id, expense_id):
+    user_id = int(get_jwt_identity())
+    group = db.session.get(Group, group_id)
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+
+    caller_membership = GroupMember.query.filter_by(
+        group_id=group_id, user_id=user_id
+    ).first()
+    if not caller_membership:
+        return jsonify({'error': 'You are not a member of this group'}), 403
+
+    expense = Expense.query.filter_by(id=expense_id, group_id=group_id).first()
+    if not expense:
+        return jsonify({'error': 'Expense not found in this group'}), 404
+
+    data = request.get_json() or {}
+
+    description = data.get('description', expense.description).strip()
+    amount_raw   = data.get('amount', expense.amount)
+    split_type   = data.get('split_type', expense.split_type)
+
+    if not description:
+        return jsonify({'error': 'description is required'}), 400
+    if split_type not in ('equal', 'exact', 'percentage'):
+        return jsonify({'error': 'split_type must be equal, exact, or percentage'}), 400
+
+    try:
+        amount = Decimal(str(amount_raw)).quantize(Decimal('0.01'))
+    except Exception:
+        return jsonify({'error': 'amount must be a valid number'}), 400
+
+    if amount <= 0:
+        return jsonify({'error': 'amount must be greater than 0'}), 400
+
+    paid_by_raw = data.get('paid_by', expense.paid_by)
+    try:
+        payer_id = int(paid_by_raw)
+    except (ValueError, TypeError):
+        return jsonify({'error': 'paid_by must be a valid integer user id'}), 400
+
+    if not GroupMember.query.filter_by(group_id=group_id, user_id=payer_id).first():
+        return jsonify({'error': 'The payer (paid_by) is not a member of this group'}), 400
+
+    memberships = GroupMember.query.filter_by(group_id=group_id).all()
+    member_ids = [m.user_id for m in memberships]
+
+    splits_data = []
+    if split_type == 'equal':
+        split_members = data.get('split_members') or data.get('members')
+        if split_members and isinstance(split_members, list) and len(split_members) > 0:
+            target_member_ids = [int(uid) for uid in split_members if int(uid) in member_ids]
+        else:
+            target_member_ids = member_ids
+
+        n = len(target_member_ids)
+        if n == 0:
+            return jsonify({'error': 'At least one group member must be included in the split'}), 400
+
+        total_paisa = int(amount * 100)
+        base_paisa  = total_paisa // n
+        remainder   = total_paisa % n
+
+        for i, uid in enumerate(target_member_ids):
+            share_paisa = base_paisa + (1 if i < remainder else 0)
+            share_amount = Decimal(share_paisa) / Decimal(100)
+            splits_data.append({'user_id': uid, 'amount_owed': share_amount})
+
+    elif split_type == 'exact':
+        splits_input = data.get('splits', [])
+        if not splits_input:
+            return jsonify({'error': 'splits array is required for exact split'}), 400
+
+        total_specified = Decimal('0')
+        for s in splits_input:
+            uid = s.get('user_id')
+            amt = s.get('amount')
+            if uid not in member_ids:
+                return jsonify({'error': f'user_id {uid} is not a member of this group'}), 400
+            try:
+                share = Decimal(str(amt)).quantize(Decimal('0.01'))
+            except Exception:
+                return jsonify({'error': f'Invalid amount for user {uid}'}), 400
+            total_specified += share
+            splits_data.append({'user_id': uid, 'amount_owed': share})
+
+        if abs(total_specified - amount) > Decimal('0.01'):
+            return jsonify({
+                'error': f'Split amounts ({total_specified}) must add up to total ({amount})'
+            }), 400
+
+    elif split_type == 'percentage':
+        splits_input = data.get('splits', [])
+        if not splits_input:
+            return jsonify({'error': 'splits array is required for percentage split'}), 400
+
+        total_pct = Decimal('0')
+        entries = []
+        for s in splits_input:
+            uid = s.get('user_id')
+            pct = s.get('percentage')
+            if uid not in member_ids:
+                return jsonify({'error': f'user_id {uid} is not a member of this group'}), 400
+            try:
+                pct_val = Decimal(str(pct))
+            except Exception:
+                return jsonify({'error': f'Invalid percentage for user {uid}'}), 400
+            total_pct += pct_val
+            entries.append((uid, pct_val))
+
+        if abs(total_pct - Decimal('100')) > Decimal('0.01'):
+            return jsonify({'error': f'Percentages must sum to 100, got {total_pct}'}), 400
+
+        total_paisa = int(amount * 100)
+        assigned_paisa = 0
+        for i, (uid, pct_val) in enumerate(entries):
+            if i < len(entries) - 1:
+                share_paisa = int((pct_val / Decimal('100')) * total_paisa)
+            else:
+                share_paisa = total_paisa - assigned_paisa
+            assigned_paisa += share_paisa
+            share_amount = Decimal(share_paisa) / Decimal(100)
+            splits_data.append({'user_id': uid, 'amount_owed': share_amount})
+
+    expense.description = description
+    expense.amount = amount
+    expense.split_type = split_type
+    expense.paid_by = payer_id
+
+    ExpenseSplit.query.filter_by(expense_id=expense.id).delete()
+    for s in splits_data:
+        split = ExpenseSplit(
+            expense_id=expense.id,
+            user_id=s['user_id'],
+            amount_owed=s['amount_owed']
+        )
+        db.session.add(split)
+
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Expense updated successfully',
+        'expense': {
+            'id': expense.id,
+            'description': expense.description,
+            'amount': str(expense.amount),
+            'split_type': expense.split_type,
+            'paid_by': expense.paid_by,
+            'splits': [
+                {
+                    'user_id': s['user_id'],
+                    'amount_owed': str(s['amount_owed'])
+                }
+                for s in splits_data
+            ]
+        }
+    }), 200
+
+
+# ---------------------------------------------------------------------------
+# DELETE /api/groups/<group_id>/expenses/<expense_id> — Delete an expense
+# ---------------------------------------------------------------------------
+@expenses_bp.route('/<int:group_id>/expenses/<int:expense_id>', methods=['DELETE'])
+@jwt_required()
+def delete_expense(group_id, expense_id):
+    user_id = int(get_jwt_identity())
+    caller_membership = GroupMember.query.filter_by(
+        group_id=group_id, user_id=user_id
+    ).first()
+    if not caller_membership:
+        return jsonify({'error': 'You are not a member of this group'}), 403
+
+    expense = Expense.query.filter_by(id=expense_id, group_id=group_id).first()
+    if not expense:
+        return jsonify({'error': 'Expense not found in this group'}), 404
+
+    ExpenseSplit.query.filter_by(expense_id=expense.id).delete()
+    db.session.delete(expense)
+    db.session.commit()
+
+    return jsonify({'message': 'Expense deleted successfully'}), 200
+
+
+# ---------------------------------------------------------------------------
 # GET /api/groups/<group_id>/expenses  — List all expenses in a group
 # ---------------------------------------------------------------------------
 @expenses_bp.route('/<int:group_id>/expenses', methods=['GET'])

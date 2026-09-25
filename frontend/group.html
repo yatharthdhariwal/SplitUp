@@ -198,11 +198,11 @@
 <!-- Navbar -->
 <div id="navbar-container"></div>
 
-<!-- ── Add Expense Modal ─────────────────────────────────── -->
+<!-- ── Add / Edit Expense Modal ─────────────────────────── -->
 <div class="modal-overlay" id="add-expense-modal">
   <div class="modal" style="max-width:540px">
     <div class="modal-header">
-      <h2 class="modal-title">💸 Add Expense</h2>
+      <h2 class="modal-title" id="expense-modal-title">💸 Add Expense</h2>
       <button class="modal-close" onclick="closeModal('add-expense-modal')">✕</button>
     </div>
     <div class="modal-body">
@@ -257,6 +257,44 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('add-expense-modal')">Cancel</button>
       <button class="btn btn-primary" id="add-expense-btn" onclick="submitAddExpense()">Save Expense →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Group Modal ────────────────────────────────── -->
+<div class="modal-overlay" id="delete-group-modal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h2 class="modal-title" style="color:var(--red)">🗑️ Delete Group</h2>
+      <button class="modal-close" onclick="closeModal('delete-group-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.95rem;line-height:1.5;color:var(--text-primary)">
+        Are you sure you want to permanently delete <strong id="delete-group-name-label">this group</strong>?
+      </p>
+      <div style="margin-top:12px;padding:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:var(--radius-md);font-size:0.82rem;color:var(--red)">
+        ⚠️ This action cannot be undone. All expenses, settlements, and member balances will be deleted forever.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delete-group-modal')">Cancel</button>
+      <button class="btn btn-danger" id="delete-group-confirm-btn" onclick="confirmDeleteGroup()">Delete Group ✕</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Leave Group Modal ─────────────────────────────────── -->
+<div class="modal-overlay" id="leave-group-modal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h2 class="modal-title">🚪 Leave Group</h2>
+      <button class="modal-close" onclick="closeModal('leave-group-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="leave-group-body">
+      <!-- Injected dynamically -->
+    </div>
+    <div class="modal-footer" id="leave-group-footer">
+      <!-- Injected dynamically -->
     </div>
   </div>
 </div>
@@ -370,10 +408,12 @@
       <div class="sub" id="group-meta"></div>
       <div class="members-chips" id="members-chips"></div>
     </div>
-    <div class="page-actions">
+    <div class="page-actions" id="header-page-actions">
       <button class="btn btn-ghost btn-sm" onclick="openAddGroupMemberModal()">👥 + Member</button>
       <button class="btn btn-success btn-sm" onclick="openSmartSettlementModal()">⚡ Settle Up</button>
       <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()">+ Add Expense</button>
+      <button class="btn btn-ghost btn-sm" onclick="openLeaveGroupModal()" title="Leave this group">🚪 Leave</button>
+      <button class="btn btn-ghost btn-sm btn-icon-danger" id="btn-delete-group" style="display:none" onclick="openDeleteGroupModal()" title="Delete this group">🗑️ Delete</button>
     </div>
   </div>
 
@@ -388,13 +428,16 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div class="activity-filters">
           <button class="filter-pill active" data-filter="all" onclick="setActivityFilter('all')">All Activity</button>
-          <button class="filter-pill" data-filter="expenses" onclick="setActivityFilter('expenses')">Expenses Only</button>
+          <button class="filter-pill" data-filter="expenses" onclick="setActivityFilter('expenses')">Expenses</button>
           <button class="filter-pill" data-filter="settlements" onclick="setActivityFilter('settlements')">Settlements</button>
         </div>
-        <button class="btn btn-ghost btn-sm" onclick="openAddExpenseModal()">+ Add Expense</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="activity-search-input" class="form-input" placeholder="🔍 Search..." style="padding:6px 12px;font-size:0.8rem;width:130px;border-radius:var(--radius-full)" oninput="renderActivityFeed()" />
+          <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()">+ Add Expense</button>
+        </div>
       </div>
 
-      <div id="activity-feed-list">
+      <div id="activity-feed-list" class="scrollable-feed custom-scrollbar">
         <div class="skeleton" style="height:74px;margin-bottom:10px"></div>
         <div class="skeleton" style="height:74px;margin-bottom:10px"></div>
         <div class="skeleton" style="height:74px;margin-bottom:10px"></div>
@@ -404,11 +447,11 @@
     <!-- Right Sidebar: Suggested Settlements & Balances -->
     <div>
       <!-- Suggested Settle Up Card -->
-      <div class="side-panel-card">
+      <div class="side-panel-card" style="margin-bottom:16px">
         <div class="side-panel-title">
           <span>⚡ Suggested Settle Up</span>
         </div>
-        <div id="suggested-debts-list">
+        <div id="suggested-debts-list" class="scrollable-panel custom-scrollbar">
           <div class="skeleton" style="height:60px"></div>
         </div>
       </div>
@@ -418,7 +461,7 @@
         <div class="side-panel-title">
           <span>👥 Group Balances</span>
         </div>
-        <div id="side-balances-list">
+        <div id="side-balances-list" class="scrollable-panel custom-scrollbar">
           <div class="skeleton" style="height:48px;margin-bottom:8px"></div>
           <div class="skeleton" style="height:48px"></div>
         </div>
@@ -439,12 +482,13 @@
   if (!groupId) window.location.href = 'dashboard.html';
 
   // ── Global State ─────────────────────────────────────────
-  let groupData       = null;
-  let members         = [];
-  let rawExpenses     = [];
-  let rawSettlements  = [];
-  let rawDebts        = [];
-  let activeFilter    = 'all';
+  let groupData         = null;
+  let members           = [];
+  let rawExpenses       = [];
+  let rawSettlements    = [];
+  let rawDebts          = [];
+  let activeFilter      = 'all';
+  let editingExpenseId  = null;
 
   // Expense modal state
   let selectedSplitType = 'equal';
@@ -473,14 +517,15 @@
   // ── Load All Data ────────────────────────────────────────
   async function loadAll() {
     try {
-      const [expData, balData, debtData, setData] = await Promise.all([
+      const [expData, balData, debtData, setData, grpData] = await Promise.all([
         API.Expenses.list(groupId),
         API.Balances.get(groupId),
         API.Balances.simplified(groupId),
         API.Settlements.list(groupId),
+        API.Groups.get(groupId),
       ]);
 
-      groupData       = { name: balData.group_name };
+      groupData       = { name: balData.group_name, created_by: grpData?.group?.created_by };
       members         = balData.balances || [];
       rawExpenses     = expData.expenses || [];
       rawDebts        = debtData.transactions || [];
@@ -490,6 +535,11 @@
       document.getElementById('group-title').textContent = groupData.name;
       document.getElementById('group-meta').textContent  =
         `👥 ${members.length} member${members.length !== 1 ? 's' : ''}`;
+
+      const me = getUser();
+      const isCreator = me && groupData.created_by === me.id;
+      const deleteBtn = document.getElementById('btn-delete-group');
+      if (deleteBtn) deleteBtn.style.display = isCreator ? 'inline-flex' : 'none';
 
       renderMemberChips();
       renderHeroBalance();
@@ -589,9 +639,11 @@
   function renderActivityFeed() {
     const el = document.getElementById('activity-feed-list');
     const me = getUser();
+    const searchInput = document.getElementById('activity-search-input');
+    const searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
 
     // Prepare unified chronological list
-    const items = [];
+    let items = [];
 
     if (activeFilter === 'all' || activeFilter === 'expenses') {
       rawExpenses.forEach(exp => {
@@ -607,15 +659,33 @@
     // Sort newest first
     items.sort((a, b) => b.date - a.date);
 
+    // Apply search filter if active
+    if (searchTerm) {
+      items = items.filter(item => {
+        if (item.type === 'expense') {
+          const exp = item.data;
+          const desc = (exp.description || '').toLowerCase();
+          const payer = (exp.paid_by?.name || '').toLowerCase();
+          return desc.includes(searchTerm) || payer.includes(searchTerm);
+        } else {
+          const s = item.data;
+          const from = (s.paid_by?.name || '').toLowerCase();
+          const to = (s.paid_to?.name || '').toLowerCase();
+          const note = (s.note || '').toLowerCase();
+          return from.includes(searchTerm) || to.includes(searchTerm) || note.includes(searchTerm);
+        }
+      });
+    }
+
     if (!items.length) {
       el.innerHTML = `
         <div class="empty-state">
           <div class="empty-icon">💸</div>
-          <p style="font-size:1rem;color:var(--text-secondary);font-weight:500">No activity yet in this group</p>
-          <p style="margin-top:6px">Add an expense to start tracking and splitting bills!</p>
-          <button class="btn btn-primary btn-sm" style="margin-top:16px" onclick="openAddExpenseModal()">
-            + Add First Expense
-          </button>
+          <p style="font-size:1rem;color:var(--text-secondary);font-weight:500">
+            ${searchTerm ? 'No activity matches your search' : 'No activity yet in this group'}
+          </p>
+          <p style="margin-top:6px">${searchTerm ? 'Try clearing the search box' : 'Add an expense to start tracking and splitting bills!'}</p>
+          ${!searchTerm ? `<button class="btn btn-primary btn-sm" style="margin-top:16px" onclick="openAddExpenseModal()">+ Add First Expense</button>` : ''}
         </div>`;
       return;
     }
@@ -623,9 +693,10 @@
     el.innerHTML = items.map(item => {
       if (item.type === 'expense') {
         const exp = item.data;
-        const payerMember = members.find(m => m.user_id === exp.paid_by);
-        const payerName   = payerMember ? payerMember.name : 'A member';
-        const isMePayer   = me && exp.paid_by === me.id;
+        const payerMember = members.find(m => m.user_id === exp.paid_by?.id || m.user_id === exp.paid_by);
+        const payerName   = payerMember ? payerMember.name : (exp.paid_by?.name || 'A member');
+        const payerId     = exp.paid_by?.id !== undefined ? exp.paid_by.id : exp.paid_by;
+        const isMePayer   = me && payerId === me.id;
 
         // Calculate my share
         const mySplit = (exp.splits || []).find(s => s.user_id === me.id);
@@ -654,9 +725,9 @@
         const emoji = getExpenseEmoji(exp.description);
 
         return `
-          <div class="activity-card" onclick="toast('Split among ${exp.splits.length} people: Total ${formatCurrency(exp.amount)}', 'info')">
-            <div class="activity-icon-box">${emoji}</div>
-            <div class="activity-main">
+          <div class="activity-card">
+            <div class="activity-icon-box" onclick="openEditExpenseModal(${exp.id})" title="Click to edit expense">${emoji}</div>
+            <div class="activity-main" onclick="openEditExpenseModal(${exp.id})">
               <div class="activity-title">${escapeHtml(exp.description)}</div>
               <div class="activity-sub">
                 <span>${isMePayer ? 'You paid' : escapeHtml(payerName) + ' paid'} <strong>${formatCurrency(exp.amount)}</strong></span>
@@ -664,8 +735,11 @@
                 <span>${formatDate(exp.created_at)}</span>
               </div>
             </div>
-            <div class="activity-amount-box">
+            <div class="activity-amount-box" onclick="openEditExpenseModal(${exp.id})">
               ${shareHtml}
+            </div>
+            <div class="activity-actions" onclick="event.stopPropagation()">
+              <button class="btn-icon" title="Edit Expense" onclick="openEditExpenseModal(${exp.id})">✏️</button>
             </div>
           </div>`;
       } else {
@@ -756,7 +830,7 @@
               ${getInitials(m.name)}
             </div>
             <div>
-              <div style="font-size:0.85rem;font-weight:600;color:${isMe ? 'var(--purple-light)' : 'var(--text-primary)'}">
+              <div style="font-size:0.85rem;font-weight:600;color:${isMe ? 'var(--green-dark)' : 'var(--text-primary)'}">
                 ${escapeHtml(m.name)}${isMe ? ' (You)' : ''}
               </div>
               <div style="font-size:0.75rem;color:${val > 0.005 ? 'var(--green)' : val < -0.005 ? 'var(--red)' : 'var(--text-muted)'}">
@@ -781,7 +855,6 @@
 
   function openSmartSettlementModal() {
     const me = getUser();
-    // Default mode: if someone owes me, set 'receive', else if I owe someone set 'pay'
     const someoneOwesMe = rawDebts.find(d => d.to.id === me.id);
     const iOweSomeone   = rawDebts.find(d => d.from.id === me.id);
 
@@ -838,7 +911,6 @@
     }
 
     select.innerHTML = otherMembers.map(m => {
-      // Look up debt relationship
       let debtHint = '';
       if (settleMode === 'receive') {
         const debt = rawDebts.find(d => d.from.id === m.user_id && d.to.id === me.id);
@@ -865,7 +937,6 @@
     settleFriendId = parseInt(select.value);
     const me = getUser();
 
-    // Check if there is an exact suggested debt with this friend
     let debtAmt = 0;
     if (settleMode === 'receive') {
       const debt = rawDebts.find(d => d.from.id === settleFriendId && d.to.id === me.id);
@@ -958,21 +1029,17 @@
     setLoading(btn, false);
   }
 
-  // ── Add Expense Functions ────────────────────────────────
+  // ── Add / Edit Expense Functions ─────────────────────────
   function openAddExpenseModal() {
+    editingExpenseId = null;
+    document.getElementById('expense-modal-title').textContent = '💸 Add Expense';
+    document.getElementById('add-expense-btn').textContent = 'Save Expense →';
     document.getElementById('exp-desc').value   = '';
     document.getElementById('exp-amount').value = '';
 
     const me = getUser();
     expensePaidById = me.id;
-
-    // Render "Paid by" chip selector
-    const chipsEl = document.getElementById('exp-paid-by-chips');
-    chipsEl.innerHTML = members.map(m => `
-      <div class="chip-selector-item ${m.user_id === me.id ? 'active' : ''}" data-uid="${m.user_id}" onclick="selectExpensePayer(${m.user_id})">
-        <div class="mini-avatar" style="width:18px;height:18px;border-radius:50%;background:var(--gradient);font-size:0.6rem;display:flex;align-items:center;justify-content:center;color:#fff">${getInitials(m.name)}</div>
-        ${m.user_id === me.id ? 'You' : escapeHtml(m.name)}
-      </div>`).join('');
+    renderPayerChips();
 
     // Default: split with everyone
     equalSplitMemberIds = new Set(members.map(m => m.user_id));
@@ -980,6 +1047,56 @@
 
     selectSplitType('equal');
     openModal('add-expense-modal');
+  }
+
+  function openEditExpenseModal(expId) {
+    const exp = rawExpenses.find(e => e.id === expId);
+    if (!exp) return;
+    editingExpenseId = expId;
+
+    document.getElementById('expense-modal-title').textContent = '✏️ Edit Expense';
+    document.getElementById('add-expense-btn').textContent = 'Update Expense ✓';
+    document.getElementById('exp-desc').value   = exp.description;
+    document.getElementById('exp-amount').value = parseFloat(exp.amount).toFixed(2);
+
+    const payerId = exp.paid_by?.id !== undefined ? exp.paid_by.id : exp.paid_by;
+    expensePaidById = payerId;
+    renderPayerChips();
+
+    selectedSplitType = exp.split_type || 'equal';
+    if (selectedSplitType === 'equal') {
+      equalSplitMemberIds = new Set(exp.splits.map(s => s.user_id));
+      renderEqualSplitToggles();
+    } else {
+      selectSplitType(selectedSplitType);
+      setTimeout(() => {
+        exp.splits.forEach(s => {
+          const input = document.querySelector(`#split-rows-container input[data-uid="${s.user_id}"]`);
+          if (input) {
+            if (selectedSplitType === 'exact') {
+              input.value = parseFloat(s.amount_owed).toFixed(2);
+            } else {
+              const pct = (parseFloat(s.amount_owed) / parseFloat(exp.amount)) * 100;
+              input.value = Math.round(pct);
+            }
+          }
+        });
+        updateSplitCalculations();
+      }, 50);
+    }
+
+    selectSplitType(selectedSplitType);
+    openModal('add-expense-modal');
+  }
+
+  function renderPayerChips() {
+    const me = getUser();
+    const chipsEl = document.getElementById('exp-paid-by-chips');
+    chipsEl.innerHTML = members.map(m => `
+      <div class="chip-selector-item ${m.user_id === expensePaidById ? 'active' : ''}" data-uid="${m.user_id}" onclick="selectExpensePayer(${m.user_id})">
+        <div class="mini-avatar" style="width:18px;height:18px;border-radius:50%;background:var(--gradient);font-size:0.6rem;display:flex;align-items:center;justify-content:center;color:#fff">${getInitials(m.name)}</div>
+        ${m.user_id === me.id ? 'You' : escapeHtml(m.name)}
+      </div>`).join('');
   }
 
   function selectExpensePayer(uid) {
@@ -990,7 +1107,7 @@
   }
 
   function autoSuggestExpenseIcon() {
-    // Visual feedback could be added if needed
+    // Visual feedback
   }
 
   function renderEqualSplitToggles() {
@@ -1109,14 +1226,104 @@
 
     setLoading(btn, true);
     try {
-      await API.Expenses.add(groupId, payload);
+      if (editingExpenseId) {
+        await API.Expenses.update(groupId, editingExpenseId, payload);
+        toast('Expense updated successfully! ✏️', 'success');
+      } else {
+        await API.Expenses.add(groupId, payload);
+        toast('Expense added successfully! 💸', 'success');
+      }
       closeModal('add-expense-modal');
-      toast('Expense added successfully! 💸', 'success');
       await loadAll();
     } catch (err) {
-      toast(err.error || 'Failed to add expense', 'error');
+      toast(err.error || 'Failed to save expense', 'error');
     }
     setLoading(btn, false);
+  }
+
+  // ── Delete Group Functions ───────────────────────────────
+  function openDeleteGroupModal() {
+    document.getElementById('delete-group-name-label').textContent = `"${groupData?.name || 'this group'}"`;
+    openModal('delete-group-modal');
+  }
+
+  async function confirmDeleteGroup() {
+    const btn = document.getElementById('delete-group-confirm-btn');
+    setLoading(btn, true);
+    try {
+      await API.Groups.delete(groupId);
+      toast('Group deleted permanently.', 'info');
+      closeModal('delete-group-modal');
+      setTimeout(() => window.location.href = 'dashboard.html', 500);
+    } catch (err) {
+      toast(err.error || 'Failed to delete group', 'error');
+      setLoading(btn, false);
+    }
+  }
+
+  // ── Leave Group Functions ────────────────────────────────
+  function openLeaveGroupModal() {
+    const me = getUser();
+    const myBalObj = members.find(m => m.user_id === me.id);
+    const val = myBalObj ? parseFloat(myBalObj.balance) : 0;
+    const bodyEl = document.getElementById('leave-group-body');
+    const footerEl = document.getElementById('leave-group-footer');
+
+    if (val > 0.005) {
+      bodyEl.innerHTML = `
+        <p style="font-size:0.95rem;line-height:1.5;color:var(--text-primary)">
+          You cannot leave <strong>${escapeHtml(groupData?.name || 'this group')}</strong> right now.
+        </p>
+        <div style="margin-top:12px;padding:12px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);font-size:0.85rem;color:var(--amber)">
+          💰 <strong>Unsettled Balance:</strong> Friends still owe you <strong>${formatCurrency(val)}</strong>. Please settle and clear all dues before leaving.
+        </div>
+      `;
+      footerEl.innerHTML = `
+        <button class="btn btn-ghost" onclick="closeModal('leave-group-modal')">Close</button>
+        <button class="btn btn-success" onclick="closeModal('leave-group-modal');openSmartSettlementModal()">⚡ Settle Up Now</button>
+      `;
+    } else if (val < -0.005) {
+      bodyEl.innerHTML = `
+        <p style="font-size:0.95rem;line-height:1.5;color:var(--text-primary)">
+          You cannot leave <strong>${escapeHtml(groupData?.name || 'this group')}</strong> right now.
+        </p>
+        <div style="margin-top:12px;padding:12px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:var(--radius-md);font-size:0.85rem;color:var(--red)">
+          💸 <strong>Outstanding Debt:</strong> You still owe <strong>${formatCurrency(Math.abs(val))}</strong> in this group. Please pay off your balance before leaving.
+        </div>
+      `;
+      footerEl.innerHTML = `
+        <button class="btn btn-ghost" onclick="closeModal('leave-group-modal')">Close</button>
+        <button class="btn btn-danger" onclick="closeModal('leave-group-modal');openSmartSettlementModal()">⚡ Pay & Settle Up</button>
+      `;
+    } else {
+      bodyEl.innerHTML = `
+        <p style="font-size:0.95rem;line-height:1.5;color:var(--text-primary)">
+          Are you sure you want to leave <strong>${escapeHtml(groupData?.name || 'this group')}</strong>?
+        </p>
+        <div style="margin-top:12px;padding:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:var(--radius-md);font-size:0.85rem;color:var(--green)">
+          ✓ Your balance is all settled (₹0.00). You can safely leave this group.
+        </div>
+      `;
+      footerEl.innerHTML = `
+        <button class="btn btn-ghost" onclick="closeModal('leave-group-modal')">Cancel</button>
+        <button class="btn btn-danger" id="leave-group-confirm-btn" onclick="confirmLeaveGroup()">Confirm & Leave</button>
+      `;
+    }
+    openModal('leave-group-modal');
+  }
+
+  async function confirmLeaveGroup() {
+    const btn = document.getElementById('leave-group-confirm-btn');
+    setLoading(btn, true);
+    try {
+      await API.Groups.leave(groupId);
+      toast('You left the group.', 'info');
+      closeModal('leave-group-modal');
+      setTimeout(() => window.location.href = 'dashboard.html', 500);
+    } catch (err) {
+      toast(err.error || 'Failed to leave group', 'error');
+      setLoading(btn, false);
+    }
   }
 
   // ── Add Group Member ─────────────────────────────────────

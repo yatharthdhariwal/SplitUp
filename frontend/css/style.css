@@ -1023,3 +1023,79 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.02em; color: var(--text-pr
   .theme-toggle .icon-sun,
   .theme-toggle .icon-moon { width: 14px; height: 14px; }
 }
+
+/* ── Custom Scrollbars ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(22, 163, 74, 0.28);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--green);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(34, 197, 94, 0.35);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--green-light);
+}
+
+.scrollable-feed {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(22, 163, 74, 0.3) transparent;
+}
+
+.scrollable-panel {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(22, 163, 74, 0.25) transparent;
+}
+
+/* ── Action Buttons for items ──────────────────────────── */
+.activity-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.btn-icon:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-active);
+  color: var(--text-primary);
+  transform: scale(1.05);
+}
+.btn-icon-danger:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-light);
+}
+

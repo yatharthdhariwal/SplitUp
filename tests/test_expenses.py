@@ -238,3 +238,58 @@ class TestBalances:
         txns = resp.get_json()['transactions']
         assert len(txns) == 1
         assert txns[0]['amount'] == '50.00'
+
+
+class TestEditExpense:
+    def test_edit_expense_success(self, client):
+        """Updating an expense recalculates splits and balances accurately."""
+        alice_token, _, group_id = setup_group_with_two_members(client)
+        resp = client.post(f'/api/groups/{group_id}/expenses',
+                           json={'description': 'Dinner', 'amount': 100, 'split_type': 'equal'},
+                           headers=auth_headers(alice_token))
+        assert resp.status_code == 201
+        exp_id = resp.get_json()['expense']['id']
+
+        # Edit to 200
+        edit_resp = client.put(f'/api/groups/{group_id}/expenses/{exp_id}',
+                               json={'description': 'Fancy Dinner', 'amount': 200, 'split_type': 'equal'},
+                               headers=auth_headers(alice_token))
+        assert edit_resp.status_code == 200
+        data = edit_resp.get_json()['expense']
+        assert data['description'] == 'Fancy Dinner'
+        assert data['amount'] == '200.00'
+
+        # Check balances
+        bal_resp = client.get(f'/api/groups/{group_id}/balances', headers=auth_headers(alice_token))
+        balances = {b['name']: Decimal(b['balance']) for b in bal_resp.get_json()['balances']}
+        assert balances['Alice'] == Decimal('100.00')
+        assert balances['Bob'] == Decimal('-100.00')
+
+    def test_edit_expense_exact_split(self, client):
+        """Updating an expense to exact splits."""
+        alice_token, _, group_id = setup_group_with_two_members(client)
+        # Register Eve to have user IDs
+        alice_id = 1
+        bob_id = 2
+        resp = client.post(f'/api/groups/{group_id}/expenses',
+                           json={'description': 'Cab', 'amount': 100, 'split_type': 'equal'},
+                           headers=auth_headers(alice_token))
+        exp_id = resp.get_json()['expense']['id']
+
+        edit_resp = client.put(f'/api/groups/{group_id}/expenses/{exp_id}',
+                               json={
+                                   'description': 'Cab',
+                                   'amount': 100,
+                                   'split_type': 'exact',
+                                   'splits': [
+                                       {'user_id': alice_id, 'amount': 30},
+                                       {'user_id': bob_id, 'amount': 70}
+                                   ]
+                               },
+                               headers=auth_headers(alice_token))
+        assert edit_resp.status_code == 200
+        bal_resp = client.get(f'/api/groups/{group_id}/balances', headers=auth_headers(alice_token))
+        balances = {b['name']: Decimal(b['balance']) for b in bal_resp.get_json()['balances']}
+        assert balances['Alice'] == Decimal('70.00')
+        assert balances['Bob'] == Decimal('-70.00')
+

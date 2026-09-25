@@ -146,6 +146,111 @@ def list_my_groups():
     return jsonify({'groups': groups}), 200
 
 
+@groups_bp.route('/<int:group_id>', methods=['GET'])
+@jwt_required()
+def get_group(group_id):
+    user_id = int(get_jwt_identity())
+    group = db.session.get(Group, group_id)
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+
+    membership = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not membership:
+        return jsonify({'error': 'You are not a member of this group'}), 403
+
+    return jsonify({
+        'group': {
+            'id': group.id,
+            'name': group.name,
+            'created_by': group.created_by,
+            'created_at': group.created_at.isoformat() if group.created_at else None
+        }
+    }), 200
+
+
+@groups_bp.route('/<int:group_id>', methods=['DELETE'])
+@jwt_required()
+def delete_group(group_id):
+    user_id = int(get_jwt_identity())
+    group = db.session.get(Group, group_id)
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+
+    if group.created_by != user_id:
+        return jsonify({'error': 'Only the creator of this group can delete it'}), 403
+
+    from app.models import Settlement, Expense, ExpenseSplit
+    # Clean up settlements
+    Settlement.query.filter_by(group_id=group_id).delete()
+    # Clean up expenses and splits
+    expenses = Expense.query.filter_by(group_id=group_id).all()
+    for exp in expenses:
+        ExpenseSplit.query.filter_by(expense_id=exp.id).delete()
+        db.session.delete(exp)
+    # Clean up memberships
+    GroupMember.query.filter_by(group_id=group_id).delete()
+    # Delete the group itself
+    db.session.delete(group)
+    db.session.commit()
+
+    return jsonify({'message': 'Group deleted successfully'}), 200
+
+
+@groups_bp.route('/<int:group_id>/leave', methods=['POST'])
+@jwt_required()
+def leave_group(group_id):
+    from decimal import Decimal
+    user_id = int(get_jwt_identity())
+    group = db.session.get(Group, group_id)
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+
+    membership = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+    if not membership:
+        return jsonify({'error': 'You are not a member of this group'}), 400
+
+    from app.routes.expenses import compute_net_balances
+    net_balance, _, _ = compute_net_balances(group_id)
+    my_balance = net_balance[user_id].quantize(Decimal('0.01'))
+
+    if abs(my_balance) > Decimal('0.005'):
+        if my_balance < 0:
+            return jsonify({
+                'error': f'Cannot leave group: You still owe ₹{abs(my_balance)}. Please settle your dues first.'
+            }), 400
+        else:
+            return jsonify({
+                'error': f'Cannot leave group: You are still owed ₹{my_balance}. Please settle with other members first.'
+            }), 400
+
+    other_members = GroupMember.query.filter(
+        GroupMember.group_id == group_id,
+        GroupMember.user_id != user_id
+    ).order_by(GroupMember.joined_at.asc()).all()
+
+    if group.created_by == user_id:
+        if other_members:
+            # Transfer group creator ownership to next joined member
+            group.created_by = other_members[0].user_id
+        else:
+            # Last member leaving removes the group
+            from app.models import Settlement, Expense, ExpenseSplit
+            Settlement.query.filter_by(group_id=group_id).delete()
+            expenses = Expense.query.filter_by(group_id=group_id).all()
+            for exp in expenses:
+                ExpenseSplit.query.filter_by(expense_id=exp.id).delete()
+                db.session.delete(exp)
+            db.session.delete(membership)
+            db.session.delete(group)
+            db.session.commit()
+            return jsonify({'message': 'You left the group and the group was deleted'}), 200
+
+    db.session.delete(membership)
+    db.session.commit()
+
+    return jsonify({'message': 'You have left the group successfully'}), 200
+
+
 @groups_bp.route('/users', methods=['GET'])
 @jwt_required()
 def list_all_users():

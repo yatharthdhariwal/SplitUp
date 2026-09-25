@@ -77,7 +77,16 @@ const Groups = {
     create: (name) =>
         apiCall('POST', '/api/groups', { name }),
 
+    get: (groupId) =>
+        apiCall('GET', `/api/groups/${groupId}`),
+
     list: () => apiCall('GET', '/api/groups'),
+
+    delete: (groupId) =>
+        apiCall('DELETE', `/api/groups/${groupId}`),
+
+    leave: (groupId) =>
+        apiCall('POST', `/api/groups/${groupId}/leave`),
 
     addMember: (groupId, email, name = '', autoCreate = true) =>
         apiCall('POST', `/api/groups/${groupId}/members`, { email, name, auto_create: autoCreate }),
@@ -93,6 +102,12 @@ const Groups = {
 const Expenses = {
     add: (groupId, data) =>
         apiCall('POST', `/api/groups/${groupId}/expenses`, data),
+
+    update: (groupId, expenseId, data) =>
+        apiCall('PUT', `/api/groups/${groupId}/expenses/${expenseId}`, data),
+
+    delete: (groupId, expenseId) =>
+        apiCall('DELETE', `/api/groups/${groupId}/expenses/${expenseId}`),
 
     list: (groupId) =>
         apiCall('GET', `/api/groups/${groupId}/expenses`),

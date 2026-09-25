@@ -109,3 +109,59 @@ class TestAddMember:
                            json={'email': 'alice@test.com'},
                            headers=auth_headers(token))
         assert resp.status_code == 404
+
+
+class TestDeleteGroup:
+    def test_delete_group_by_creator(self, client):
+        """Creator can delete the group."""
+        token, group_id = setup_user_and_group(client)
+        resp = client.delete(f'/api/groups/{group_id}', headers=auth_headers(token))
+        assert resp.status_code == 200
+
+        # Group no longer exists
+        list_resp = client.get('/api/groups', headers=auth_headers(token))
+        assert len(list_resp.get_json()['groups']) == 0
+
+    def test_delete_group_by_non_creator_forbidden(self, client):
+        """Non-creator member receives 403 Forbidden."""
+        alice_token, group_id = setup_user_and_group(client)
+        register_user(client, name='Bob', email='bob@test.com', password='bobpass')
+        bob_token = login_user(client, email='bob@test.com', password='bobpass')
+        client.post(f'/api/groups/{group_id}/members', json={'email': 'bob@test.com'}, headers=auth_headers(alice_token))
+
+        resp = client.delete(f'/api/groups/{group_id}', headers=auth_headers(bob_token))
+        assert resp.status_code == 403
+
+
+class TestLeaveGroup:
+    def test_leave_group_with_zero_balance(self, client):
+        """A member with 0 balance can leave the group."""
+        alice_token, group_id = setup_user_and_group(client)
+        register_user(client, name='Bob', email='bob@test.com', password='bobpass')
+        bob_token = login_user(client, email='bob@test.com', password='bobpass')
+        client.post(f'/api/groups/{group_id}/members', json={'email': 'bob@test.com'}, headers=auth_headers(alice_token))
+
+        resp = client.post(f'/api/groups/{group_id}/leave', headers=auth_headers(bob_token))
+        assert resp.status_code == 200
+
+        # Bob is no longer listed in members
+        members_resp = client.get(f'/api/groups/{group_id}/members', headers=auth_headers(alice_token))
+        member_emails = [m['email'] for m in members_resp.get_json()['members']]
+        assert 'bob@test.com' not in member_emails
+
+    def test_leave_group_blocked_when_owing_money(self, client):
+        """A member who owes money cannot leave."""
+        alice_token, group_id = setup_user_and_group(client)
+        register_user(client, name='Bob', email='bob@test.com', password='bobpass')
+        bob_token = login_user(client, email='bob@test.com', password='bobpass')
+        client.post(f'/api/groups/{group_id}/members', json={'email': 'bob@test.com'}, headers=auth_headers(alice_token))
+
+        # Alice creates an expense of 100 split equally -> Bob owes 50
+        client.post(f'/api/groups/{group_id}/expenses',
+                    json={'description': 'Food', 'amount': 100, 'split_type': 'equal'},
+                    headers=auth_headers(alice_token))
+
+        resp = client.post(f'/api/groups/{group_id}/leave', headers=auth_headers(bob_token))
+        assert resp.status_code == 400
+        assert 'Cannot leave group' in resp.get_json()['error']
+
