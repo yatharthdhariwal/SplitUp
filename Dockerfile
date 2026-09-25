@@ -37,6 +37,7 @@ EXPOSE 8000
 # Set the default environment to production.
 # Can be overridden in docker-compose.yml or the hosting platform.
 ENV FLASK_ENV=production
+ENV FLASK_APP=run.py
 
 # Run the entrypoint script when the container starts.
 # It applies migrations then starts gunicorn.

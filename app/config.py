@@ -13,7 +13,11 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-change-this-in-production')
 
     # Database connection string — loaded from .env
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    # Render provides postgres:// but SQLAlchemy 2.x requires postgresql://
+    _raw_db_url = os.environ.get('DATABASE_URL', '')
+    if _raw_db_url.startswith('postgres://'):
+        _raw_db_url = _raw_db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _raw_db_url or 'sqlite:///splitwise.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # suppresses a warning we don't need
 
     # JWT secret key — different from SECRET_KEY intentionally
