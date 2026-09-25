@@ -50,7 +50,7 @@ def add_member(group_id):
     if not email and not name:
         return jsonify({'error': 'email is required'}), 400
 
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 
@@ -107,7 +107,7 @@ def add_member(group_id):
 @groups_bp.route('/<int:group_id>/members', methods=['GET'])
 @jwt_required()
 def get_group_members(group_id):
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 

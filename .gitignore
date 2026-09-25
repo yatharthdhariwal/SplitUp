@@ -1,5 +1,6 @@
 # Python
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -7,9 +8,12 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+*.egg
 
 # Environment
 .env
+.env.local
+.env.*.local
 
 # Database
 instance/
@@ -24,12 +28,23 @@ uploads/
 htmlcov/
 .coverage
 coverage.xml
+*.cover
 
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # IDE
 .vscode/
 .idea/
-*.swp
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Docker (optional local volumes)
+docker-data/

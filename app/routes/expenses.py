@@ -44,7 +44,7 @@ def add_expense(group_id):
         return jsonify({'error': 'amount must be greater than 0'}), 400
 
     # --- 2. Check the group exists ---
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 
@@ -225,7 +225,7 @@ def list_expenses(group_id):
     if not membership:
         return jsonify({'error': 'You are not a member of this group'}), 403
 
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 
@@ -323,7 +323,7 @@ def get_balances(group_id):
     if not GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first():
         return jsonify({'error': 'You are not a member of this group'}), 403
 
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 
@@ -362,7 +362,7 @@ def get_simplified_debts(group_id):
     if not GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first():
         return jsonify({'error': 'You are not a member of this group'}), 403
 
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 

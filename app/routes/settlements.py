@@ -36,7 +36,7 @@ def record_settlement(group_id):
     if not GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first():
         return jsonify({'error': 'You are not a member of this group'}), 403
 
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 
@@ -85,8 +85,8 @@ def record_settlement(group_id):
     if not GroupMember.query.filter_by(group_id=group_id, user_id=paid_to_id).first():
         return jsonify({'error': 'The recipient (paid_to) is not a member of this group'}), 400
 
-    payer = User.query.get(paid_by_id)
-    recipient = User.query.get(paid_to_id)
+    payer = db.session.get(User, paid_by_id)
+    recipient = db.session.get(User, paid_to_id)
     if not payer or not recipient:
         return jsonify({'error': 'User not found'}), 404
 
@@ -129,7 +129,7 @@ def list_settlements(group_id):
     if not GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first():
         return jsonify({'error': 'You are not a member of this group'}), 403
 
-    group = Group.query.get(group_id)
+    group = db.session.get(Group, group_id)
     if not group:
         return jsonify({'error': 'Group not found'}), 404
 

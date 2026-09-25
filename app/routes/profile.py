@@ -20,7 +20,7 @@ def allowed_file(filename):
 def get_profile():
     """Return the current user's profile info."""
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
 
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -39,7 +39,7 @@ def get_profile():
 def update_profile():
     """Update the current user's name. Email cannot be changed."""
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
 
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -72,7 +72,7 @@ def update_profile():
 def upload_profile_picture():
     """Upload a profile picture for the current user."""
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
 
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -125,7 +125,7 @@ def upload_profile_picture():
 def delete_profile_picture():
     """Remove the current user's profile picture."""
     user_id = get_jwt_identity()
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
 
     if not user:
         return jsonify({'error': 'User not found'}), 404

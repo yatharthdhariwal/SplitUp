@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 class User(db.Model):
@@ -10,7 +10,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     profile_picture = db.Column(db.String(255), nullable=True)  # filename of uploaded avatar
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -22,7 +22,7 @@ class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     members = db.relationship('GroupMember', backref='group', cascade='all, delete-orphan')
 
@@ -36,7 +36,7 @@ class GroupMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey('groups.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    joined_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     user = db.relationship('User')
 
@@ -83,7 +83,7 @@ class Expense(db.Model):
         default='equal'
     )
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     # Relationships — makes it easy to do expense.splits or expense.payer
     splits = db.relationship('ExpenseSplit', backref='expense', cascade='all, delete-orphan')
@@ -144,7 +144,7 @@ class Settlement(db.Model):
     # Optional note: "UPI", "Cash", "Bank transfer", etc.
     note = db.Column(db.String(255), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
 
     # Relationships for easy access: settlement.sender / settlement.receiver
     sender   = db.relationship('User', foreign_keys=[paid_by])
