@@ -124,3 +124,8 @@ def register_error_handlers(app):
     @app.errorhandler(DecodeError)
     def handle_decode_error(e):
         return jsonify({'error': 'Token is invalid or corrupted', 'code': 'TOKEN_INVALID'}), 401
+
+    @app.errorhandler(UserLookupError)
+    def handle_user_lookup_error(e):
+        return jsonify({'error': 'User session is invalid. Please sign in again.', 'code': 'USER_NOT_FOUND'}), 401
+

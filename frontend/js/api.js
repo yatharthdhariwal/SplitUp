@@ -45,10 +45,16 @@ async function apiCall(method, endpoint, body = null) {
     const data = await response.json();
 
     if (!response.ok) {
-        // Token expired → clear session and redirect to login
-        if (response.status === 401 && data.code === 'TOKEN_EXPIRED') {
-            localStorage.clear();
-            window.location.href = 'index.html';
+        // Token expired / invalid user / unauthorized → clear session and redirect to login
+        if (response.status === 401 && !endpoint.startsWith('/api/auth/login') && !endpoint.startsWith('/api/auth/register')) {
+            localStorage.removeItem('sw_token');
+            localStorage.removeItem('sw_user');
+            sessionStorage.removeItem('sw_token');
+            sessionStorage.removeItem('sw_user');
+            const path = window.location.pathname;
+            if (!path.endsWith('index.html') && path !== '/' && !path.endsWith('/')) {
+                window.location.href = 'index.html';
+            }
         }
         throw data; // Let the caller handle it (contains { error, code })
     }

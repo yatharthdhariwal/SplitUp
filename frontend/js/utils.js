@@ -119,15 +119,25 @@ function expenseEmoji(desc = '') {
 function saveSession(token, user) {
     localStorage.setItem('sw_token', token);
     localStorage.setItem('sw_user', JSON.stringify(user));
+    // Clear legacy sessionStorage if any exists
+    sessionStorage.removeItem('sw_token');
+    sessionStorage.removeItem('sw_user');
 }
 
 function getUser() {
-    try { return JSON.parse(localStorage.getItem('sw_user')); }
-    catch { return null; }
+    try {
+        const userStr = localStorage.getItem('sw_user') || sessionStorage.getItem('sw_user');
+        return userStr ? JSON.parse(userStr) : null;
+    } catch {
+        return null;
+    }
 }
 
 function logout() {
-    localStorage.clear();
+    localStorage.removeItem('sw_token');
+    localStorage.removeItem('sw_user');
+    sessionStorage.removeItem('sw_token');
+    sessionStorage.removeItem('sw_user');
     window.location.href = 'index.html';
 }
 

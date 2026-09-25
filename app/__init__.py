@@ -37,6 +37,29 @@ def create_app(config_override=None):
     migrate.init_app(app, db)
     jwt.init_app(app)
 
+    @jwt.user_lookup_loader
+    def user_lookup_callback(_jwt_header, jwt_data):
+        identity = jwt_data.get("sub")
+        if not identity:
+            return None
+        from app.models import User
+        try:
+            user = db.session.get(User, int(identity))
+        except (ValueError, TypeError):
+            return None
+        if not user:
+            return None
+        token_email = jwt_data.get("email")
+        if token_email and user.email.lower() != token_email.lower():
+            return None
+        return user
+
+    @jwt.user_lookup_error_loader
+    def user_lookup_error_callback(_jwt_header, jwt_data):
+        from flask import jsonify
+        return jsonify({'error': 'User session is invalid. Please sign in again.', 'code': 'USER_NOT_FOUND'}), 401
+
+
     # CORS — Cross-Origin Resource Sharing
     # WHY: When the frontend (e.g. React on localhost:3000) calls this API
     # (localhost:5000), the browser blocks it by default as a "cross-origin"
