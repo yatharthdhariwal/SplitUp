@@ -1,6 +1,6 @@
-# SplitWise Clone — Bill-Splitting Backend API
+# SplitUp — Bill-Splitting App
 
-A production-ready REST API for splitting bills among friends, built with Python + Flask. Inspired by Splitwise.
+A production-ready REST API + frontend for splitting bills among friends, built with Python + Flask. Inspired by Splitwise.
 
 [![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen)]()
 [![Python](https://img.shields.io/badge/python-3.11-blue)]()
@@ -21,15 +21,16 @@ A production-ready REST API for splitting bills among friends, built with Python
 - 🧮 **Debt Simplification** — greedy algorithm finds minimum transactions to settle a group
 - ✅ **Settlements** — record actual repayments; balances update automatically
 - 🔢 **Precise Money Math** — all amounts stored as `NUMERIC(10,2)`, never `Float`
+- 🗄️ **SQLite** — zero-config, file-based database (no external services needed)
 - 🐳 **Docker** — one-command local setup
-- ✅ **45 Tests** — full pytest suite, runs without PostgreSQL
+- ✅ **45 Tests** — full pytest suite
 
 ---
 
 ## Project Structure
 
 ```
-splitwise-clone/
+SplitUp/
 ├── app/
 │   ├── __init__.py        # App factory (create_app)
 │   ├── config.py          # Dev/Prod config, reads from .env
@@ -40,14 +41,19 @@ splitwise-clone/
 │   │   ├── __init__.py    # auth_bp  → /api/auth/*
 │   │   ├── groups.py      # groups_bp → /api/groups/*
 │   │   ├── expenses.py    # expenses_bp → /api/groups/<id>/expenses, balances
-│   │   └── settlements.py # settlements_bp → /api/groups/<id>/settlements
+│   │   ├── settlements.py # settlements_bp → /api/groups/<id>/settlements
+│   │   └── profile.py     # profile_bp → /api/profile/*
 │   └── utils/
 │       └── __init__.py    # hash_password(), check_password()
+├── frontend/              # Static HTML/CSS/JS frontend
+├── instance/              # SQLite database file (auto-created, git-ignored)
 ├── migrations/            # Alembic migration history
-├── tests/                 # pytest suite (45 tests, uses SQLite)
+├── tests/                 # pytest suite (45 tests)
 ├── Dockerfile
 ├── docker-compose.yml
 ├── entrypoint.sh
+├── build.sh               # Render build script
+├── render.yaml            # Render deployment blueprint
 ├── requirements.txt
 ├── run.py
 ├── .env.example
@@ -103,14 +109,14 @@ All endpoints return JSON. Error responses always follow:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/splitwise-clone.git
-cd splitwise-clone
+git clone https://github.com/yatharthdhariwal/SplitUp.git
+cd SplitUp
 
 # 2. Copy environment variables
 cp .env.example .env
 # Edit .env and set SECRET_KEY and JWT_SECRET_KEY to random values
 
-# 3. Start everything (PostgreSQL + Flask API)
+# 3. Start the app (SQLite database is auto-created)
 docker compose up --build
 
 # API is now running at http://localhost:5000
@@ -120,8 +126,8 @@ docker compose up --build
 
 ```bash
 # 1. Clone and enter the project
-git clone https://github.com/YOUR_USERNAME/splitwise-clone.git
-cd splitwise-clone
+git clone https://github.com/yatharthdhariwal/SplitUp.git
+cd SplitUp
 
 # 2. Create and activate a virtual environment
 python -m venv venv
@@ -135,9 +141,9 @@ pip install -r requirements.txt
 
 # 4. Set up environment variables
 cp .env.example .env
-# Edit .env — set DATABASE_URL to your local PostgreSQL connection string
+# Edit .env — set SECRET_KEY and JWT_SECRET_KEY
 
-# 5. Apply database migrations
+# 5. Apply database migrations (SQLite DB auto-created in instance/)
 flask db upgrade
 
 # 6. Run the development server
@@ -149,7 +155,7 @@ python run.py
 
 ## Running Tests
 
-Tests use SQLite in-memory — **no PostgreSQL needed**.
+Tests use SQLite in-memory — **no setup needed**.
 
 ```bash
 # Activate your virtual environment first, then:
@@ -172,50 +178,46 @@ Copy `.env.example` to `.env` and fill in your values:
 | `FLASK_ENV` | No | `development` | `development` or `production` |
 | `SECRET_KEY` | Yes | — | Flask session secret — use `python -c "import secrets; print(secrets.token_hex(32))"` |
 | `JWT_SECRET_KEY` | Yes | — | JWT signing secret — generate same way |
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `DATABASE_URL` | No | `sqlite:///instance/splitup.db` | Override to use PostgreSQL or another DB |
 | `JWT_ACCESS_TOKEN_EXPIRES_MINUTES` | No | `60` (dev) / `15` (prod) | Token lifetime |
 | `ALLOWED_ORIGINS` | No | `*` | CORS allowed origins — lock down in production |
 
 ---
 
-## Deploying to Render + Neon (Free Tier)
+## Deploying to Render
 
-### Step 1 — Create a Neon PostgreSQL database
+### Option A — Blueprint (one-click)
 
-1. Sign up at [neon.tech](https://neon.tech) (free tier available)
-2. Create a new project
-3. Copy the connection string — looks like:
-   ```
-   postgresql://user:pass@ep-xxx.us-east-1.aws.neon.tech/splitwise_db?sslmode=require
-   ```
+1. Push this repo to GitHub
+2. Go to [render.com/dashboard](https://dashboard.render.com/) → **New** → **Blueprint**
+3. Connect your GitHub repo — Render auto-detects `render.yaml`
+4. Click **Apply** — it creates the web service with a persistent disk for SQLite
+5. Done! Your app is live.
 
-### Step 2 — Push to GitHub
+### Option B — Manual Setup
 
-```bash
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/splitwise-clone.git
-git push -u origin main
-```
-
-### Step 3 — Deploy on Render
-
-1. Sign up at [render.com](https://render.com) (free tier available)
-2. New → **Web Service** → Connect your GitHub repo
-3. Render auto-detects the `Dockerfile` — no extra config needed
-4. Set environment variables in the Render dashboard:
+1. Go to [render.com/dashboard](https://dashboard.render.com/) → **New** → **Web Service**
+2. Connect your GitHub repo `yatharthdhariwal/SplitUp`
+3. Configure:
+   - **Runtime**: Python 3
+   - **Build Command**: `./build.sh`
+   - **Start Command**: `gunicorn --workers 2 --bind 0.0.0.0:$PORT --timeout 120 run:app`
+4. Add environment variables:
    - `FLASK_ENV` = `production`
-   - `DATABASE_URL` = *(your Neon connection string)*
-   - `SECRET_KEY` = *(generate with `secrets.token_hex(32)`)*
-   - `JWT_SECRET_KEY` = *(generate with `secrets.token_hex(32)`)*
-   - `ALLOWED_ORIGINS` = *(your frontend domain, or `*` for now)*
-5. Click **Deploy**
+   - `FLASK_APP` = `run.py`
+   - `SECRET_KEY` = *(generate with `python -c "import secrets; print(secrets.token_hex(32))"`)*
+   - `JWT_SECRET_KEY` = *(generate same way)*
+   - `ALLOWED_ORIGINS` = `*`
+5. **Add a Disk** (Settings → Disks):
+   - **Mount Path**: `/opt/render/project/src/instance`
+   - **Size**: 1 GB
+6. Click **Deploy**
 
-The `entrypoint.sh` automatically runs `flask db upgrade` on every deploy, so migrations are always applied.
+> **Note**: The persistent disk ensures your SQLite database survives redeploys.
+> Render's free tier includes one 1 GB disk at no cost.
 
-### Step 4 — Verify
+### Verify
 
-Hit your live Render URL:
 ```bash
 curl https://your-app.onrender.com/api/auth/register \
   -X POST \
@@ -237,8 +239,7 @@ curl https://your-app.onrender.com/api/auth/register \
 | Password Hashing | bcrypt |
 | CORS | Flask-CORS |
 | Production Server | Gunicorn |
-| Database (prod) | PostgreSQL (Neon free tier) |
-| Database (tests) | SQLite (in-memory) |
+| Database | SQLite (file-based, zero config) |
 | Testing | pytest + pytest-flask |
 
 ---

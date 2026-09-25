@@ -12,12 +12,12 @@ class Config:
     # Flask secret key — used for session signing (not JWT)
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-change-this-in-production')
 
-    # Database connection string — loaded from .env
-    # Render provides postgres:// but SQLAlchemy 2.x requires postgresql://
-    _raw_db_url = os.environ.get('DATABASE_URL', '')
-    if _raw_db_url.startswith('postgres://'):
-        _raw_db_url = _raw_db_url.replace('postgres://', 'postgresql://', 1)
-    SQLALCHEMY_DATABASE_URI = _raw_db_url or 'sqlite:///splitwise.db'
+    # Database connection — SQLite by default (zero config, no external service needed).
+    # The DB file lives at <project_root>/instance/splitup.db.
+    # Override with DATABASE_URL env var to use PostgreSQL or any other DB.
+    _basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    _default_db = 'sqlite:///' + os.path.join(_basedir, 'instance', 'splitup.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or _default_db
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # suppresses a warning we don't need
 
     # JWT secret key — different from SECRET_KEY intentionally

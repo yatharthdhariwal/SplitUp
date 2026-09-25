@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------
-# Dockerfile for SplitWise Clone (Flask API)
+# Dockerfile for SplitUp (Flask API + SQLite)
 # -----------------------------------------------------------------------
-# Build:   docker build -t splitwise-clone .
+# Build:   docker build -t splitup .
 # Run:     docker compose up   (preferred — uses docker-compose.yml)
 # -----------------------------------------------------------------------
 
@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Now copy the rest of the application code.
 # This happens AFTER pip install so code changes don't bust the pip cache.
 COPY . .
+
+# Create the instance directory for SQLite database
+RUN mkdir -p instance
 
 # Make the entrypoint script executable
 RUN chmod +x entrypoint.sh
