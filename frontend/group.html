@@ -140,25 +140,51 @@
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
+        margin-bottom: 16px;
       }
       .group-title-section h1 { font-size: 1.35rem; }
+      .group-title-section .sub { font-size: 0.8rem; }
       .page-actions {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
         gap: 8px;
-        flex-wrap: wrap;
+        width: 100%;
       }
-      .page-actions .btn { flex: 1; min-width: 0; justify-content: center; font-size: 0.8rem; }
+      .page-actions .btn {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+        height: 38px;
+      }
+      /* If there's an odd button like Delete, make it span full width */
+      .page-actions #btn-delete-group {
+        grid-column: 1 / -1;
+      }
 
       .balance-hero-card {
         padding: 14px 16px;
         flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+        align-items: stretch;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .balance-hero-card .btn {
+        width: 100%;
+        justify-content: center;
       }
       .hero-stat-value { font-size: 1.3rem; }
 
-      .activity-card { padding: 12px 14px; gap: 10px; }
-      .activity-icon-box { width: 36px; height: 36px; font-size: 1rem; }
+      .activity-card {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+      .activity-icon-box {
+        width: 38px;
+        height: 38px;
+        font-size: 1.1rem;
+      }
       .activity-title { font-size: 0.88rem; }
       .activity-sub { font-size: 0.72rem; }
       .activity-user-share { font-size: 0.88rem; }
@@ -182,6 +208,9 @@
     @media (max-width: 400px) {
       .group-title-section h1 { font-size: 1.15rem; }
       .hero-stat-value { font-size: 1.1rem; }
+      .page-actions {
+        grid-template-columns: 1fr;
+      }
       .page-actions .btn { font-size: 0.76rem; padding: 7px 10px; }
     }
   </style>
@@ -425,13 +454,13 @@
 
     <!-- Left Column: Activity Feed -->
     <div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div class="activity-feed-controls" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div class="activity-filters">
           <button class="filter-pill active" data-filter="all" onclick="setActivityFilter('all')">All Activity</button>
           <button class="filter-pill" data-filter="expenses" onclick="setActivityFilter('expenses')">Expenses</button>
           <button class="filter-pill" data-filter="settlements" onclick="setActivityFilter('settlements')">Settlements</button>
         </div>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div class="activity-search-bar" style="display:flex;gap:8px;align-items:center">
           <input type="text" id="activity-search-input" class="form-input" placeholder="🔍 Search..." style="padding:6px 12px;font-size:0.8rem;width:130px;border-radius:var(--radius-full)" oninput="renderActivityFeed()" />
           <button class="btn btn-primary btn-sm" onclick="openAddExpenseModal()">+ Add Expense</button>
         </div>

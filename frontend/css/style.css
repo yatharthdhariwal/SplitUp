@@ -850,16 +850,31 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.02em; color: var(--text-pr
 
 /* ── Responsive ─────────────────────────────────────────── */
 
-/* ── Tablet (≤900px) ───────────────────────────────────── */
-@media (max-width: 900px) {
-  .group-dashboard-grid { grid-template-columns: 1fr; }
+/* ── Responsive Media Queries ───────────────────────────── */
+
+/* ── Tablet & Small Laptops (≤960px) ────────────────────── */
+@media (max-width: 960px) {
+  .group-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .page-container {
+    padding: 24px 16px;
+  }
 }
 
 /* ── Mobile (≤640px) ───────────────────────────────────── */
 @media (max-width: 640px) {
-
-  /* ─ Page Container ─ */
-  .page-container { padding: 16px 12px; }
+  /* ─ Base & Container ─ */
+  body {
+    font-size: 14px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .page-container {
+    padding: 14px 12px 24px;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
 
   /* ─ Navbar ─ */
   .navbar {
@@ -872,156 +887,401 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.02em; color: var(--text-pr
     gap: 8px;
   }
   .navbar-brand .logo-icon {
-    width: 30px; height: 30px;
+    width: 32px;
+    height: 32px;
   }
   .navbar-right {
-    gap: 8px;
+    gap: 6px;
   }
-  /* Hide the user name text on mobile; keep the avatar */
-  .user-name { display: none; }
+  /* Hide user name text on mobile; keep the avatar chip */
+  .user-name {
+    display: none;
+  }
   .user-chip {
-    padding: 4px;
+    padding: 3px;
     border-radius: 50%;
+    background: transparent;
+    border-color: transparent;
   }
   .user-avatar {
-    width: 30px; height: 30px;
-    font-size: 0.7rem;
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
   }
   .navbar-right .btn-sm {
     padding: 6px 10px;
     font-size: 0.76rem;
+    height: 32px;
+  }
+  .nav-back-btn {
+    padding: 5px 8px;
+    font-size: 0.76rem;
+    height: 32px;
   }
 
   /* ─ Theme Toggle ─ */
   .theme-toggle {
-    width: 34px; height: 34px;
+    width: 34px;
+    height: 34px;
   }
   .theme-toggle .icon-sun,
   .theme-toggle .icon-moon {
-    width: 16px; height: 16px;
+    width: 16px;
+    height: 16px;
   }
 
   /* ─ Stats Row ─ */
-  .stat-card { padding: 16px; }
-  .stat-value { font-size: 1.4rem; }
-  .stat-label { font-size: 0.72rem; }
-  .stat-sub { font-size: 0.74rem; }
+  #stats-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    margin-bottom: 20px !important;
+  }
+  .stat-card {
+    padding: 16px 18px;
+  }
+  .stat-value {
+    font-size: 1.5rem;
+    margin-top: 4px;
+  }
+  .stat-label {
+    font-size: 0.72rem;
+  }
+  .stat-sub {
+    font-size: 0.75rem;
+  }
 
   /* ─ Section Header ─ */
-  .section-header { gap: 8px; }
-  .section-title { font-size: 0.85rem; }
+  .section-header {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 0.88rem;
+  }
 
   /* ─ Group Cards ─ */
-  .groups-grid { grid-template-columns: 1fr; gap: 12px; }
-  .group-card { padding: 16px; }
-  .group-icon { width: 40px; height: 40px; font-size: 18px; margin-bottom: 12px; }
-  .group-name { font-size: 0.95rem; }
+  .groups-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-height: none !important;
+    overflow-y: visible !important;
+  }
+  .group-card {
+    padding: 16px;
+  }
+  .group-card .btn-sm {
+    flex: 1;
+    justify-content: center;
+  }
+  .group-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .group-name {
+    font-size: 1rem;
+  }
 
-  /* ─ Expense Items ─ */
-  .expense-item { padding: 12px 14px; gap: 10px; }
-  .expense-icon { width: 36px; height: 36px; font-size: 15px; }
-  .expense-desc { font-size: 0.88rem; }
-  .expense-amount { font-size: 0.95rem; }
+  /* ─ Activity & Feed Controls ─ */
+  .activity-feed-controls {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .activity-search-bar {
+    width: 100% !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+  .activity-search-bar input {
+    flex: 1 !important;
+    width: auto !important;
+  }
+
+  /* ─ Expense Items & Activity Cards ─ */
+  .expense-item, .activity-card {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .expense-icon, .activity-icon-box {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+  .expense-desc, .activity-title {
+    font-size: 0.88rem;
+  }
+  .expense-meta, .activity-sub {
+    font-size: 0.74rem;
+  }
+  .expense-amount, .activity-user-share {
+    font-size: 0.92rem;
+  }
+  .activity-total {
+    font-size: 0.7rem;
+  }
 
   /* ─ Balance Items ─ */
-  .balance-item { padding: 12px 14px; gap: 10px; }
-  .balance-avatar { width: 32px; height: 32px; font-size: 0.75rem; }
-  .balance-name { font-size: 0.85rem; }
-  .balance-amount { font-size: 0.9rem; }
+  .balance-item {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .balance-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.75rem;
+  }
+  .balance-name {
+    font-size: 0.85rem;
+  }
+  .balance-amount {
+    font-size: 0.9rem;
+  }
 
   /* ─ Debt Items ─ */
-  .debt-item { padding: 12px 14px; gap: 8px; flex-wrap: wrap; }
-  .debt-from, .debt-to { font-size: 0.85rem; }
-  .debt-amount { font-size: 0.88rem; }
+  .debt-item {
+    padding: 12px 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .debt-from, .debt-to {
+    font-size: 0.85rem;
+  }
+  .debt-amount {
+    font-size: 0.88rem;
+  }
 
   /* ─ Settlement Items ─ */
-  .settlement-item { padding: 12px 14px; gap: 10px; }
-  .settlement-text { font-size: 0.82rem; }
-  .settlement-amount { font-size: 0.9rem; }
+  .settlement-item {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .settlement-text {
+    font-size: 0.82rem;
+  }
+  .settlement-amount {
+    font-size: 0.9rem;
+  }
 
   /* ─ Modals ─ */
-  .modal-overlay { padding: 12px; }
-  .modal {
-    padding: 20px 16px;
-    border-radius: var(--radius-lg);
-    max-height: 90vh;
-    overflow-y: auto;
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
   }
-  .modal-title { font-size: 1.05rem; }
+  .modal {
+    padding: 22px 18px;
+    border-radius: var(--radius-xl) var(--radius-xl) var(--radius-md) var(--radius-md);
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-header {
+    margin-bottom: 16px;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+  }
+  .modal-body {
+    gap: 14px;
+  }
+  .modal-footer {
+    margin-top: 20px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .modal-footer .btn {
+    width: 100%;
+  }
 
   /* ─ Tabs ─ */
-  .tabs { width: 100%; }
-  .tab-btn { flex: 1; text-align: center; font-size: 0.82rem; padding: 8px 12px; }
+  .tabs {
+    width: 100%;
+  }
+  .tab-btn {
+    flex: 1;
+    text-align: center;
+    font-size: 0.82rem;
+    padding: 8px 10px;
+  }
 
-  /* ─ Buttons ─ */
-  .btn { padding: 10px 18px; font-size: 0.84rem; }
-  .btn-sm { padding: 7px 12px; font-size: 0.78rem; }
+  /* ─ Buttons & Tap Targets ─ */
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.86rem;
+    min-height: 40px;
+  }
+  .btn-sm {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+    min-height: 34px;
+  }
 
-  /* ─ Forms ─ */
-  .form-input, .form-select { padding: 10px 14px; font-size: 0.9rem; }
-  .form-label { font-size: 0.76rem; }
+  /* ─ Form Elements ─ */
+  .form-input, .form-select {
+    padding: 11px 14px;
+    font-size: 0.92rem;
+    min-height: 42px;
+  }
+  .form-label {
+    font-size: 0.76rem;
+  }
 
   /* ─ Toast Notifications ─ */
   #toast-container {
-    bottom: 12px; right: 12px; left: 12px;
+    bottom: 12px;
+    right: 12px;
+    left: 12px;
   }
   .toast {
-    min-width: unset; width: 100%;
+    min-width: unset;
+    width: 100%;
     font-size: 0.82rem;
     padding: 12px 14px;
   }
 
   /* ─ Members ─ */
-  .members-chips { gap: 6px; }
-  .member-chip { font-size: 0.75rem; padding: 3px 10px 3px 5px; }
-
-  /* ─ Settle Up ─ */
-  .settle-mode-grid { grid-template-columns: 1fr; }
-  .transfer-visual-card {
-    flex-direction: column;
-    padding: 14px;
-    gap: 10px;
+  .members-chips {
+    gap: 6px;
   }
-  .transfer-avatar-box { width: auto; }
-  .transfer-arrow-box { transform: rotate(90deg); padding: 4px 0; }
-  .quick-amount-chips { gap: 6px; }
+  .member-chip {
+    font-size: 0.76rem;
+    padding: 4px 10px 4px 5px;
+  }
 
-  /* ─ Side Panel ─ */
-  .side-panel-card { padding: 16px; }
-  .side-panel-title { font-size: 0.78rem; }
+  /* ─ Settle Up & Interactive Elements ─ */
+  .settle-mode-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .settle-mode-btn {
+    padding: 9px 8px;
+    font-size: 0.78rem;
+  }
+  .transfer-visual-card {
+    padding: 12px;
+    gap: 8px;
+  }
+  .transfer-avatar-box {
+    width: 70px;
+  }
+  .transfer-avatar-box .avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 0.8rem;
+  }
+  .transfer-avatar-box span {
+    font-size: 0.72rem;
+    max-width: 70px;
+  }
+  .transfer-arrow-box {
+    padding: 0 4px;
+  }
+  .quick-amount-chips {
+    gap: 6px;
+  }
+  .quick-chip {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+
+  /* ─ Side Panels ─ */
+  .side-panel-card {
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .side-panel-title {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
 
   /* ─ Activity Filters ─ */
   .activity-filters {
+    display: flex;
     flex-wrap: wrap;
     gap: 6px;
   }
   .filter-pill {
-    font-size: 0.75rem;
-    padding: 5px 10px;
+    font-size: 0.76rem;
+    padding: 6px 12px;
+  }
+
+  /* ─ Scrollable containers on mobile ─ */
+  .scrollable-feed {
+    max-height: none;
+    overflow-y: visible;
+  }
+  .scrollable-panel {
+    max-height: 280px;
   }
 
   /* ─ Empty State ─ */
-  .empty-state { padding: 40px 16px; }
-  .empty-state .empty-icon { font-size: 2.2rem; }
-  .empty-state p { font-size: 0.84rem; }
+  .empty-state {
+    padding: 36px 16px;
+  }
+  .empty-state .empty-icon {
+    font-size: 2.2rem;
+  }
+  .empty-state p {
+    font-size: 0.84rem;
+  }
 
   /* ─ Skeleton ─ */
-  .skeleton { border-radius: var(--radius-sm); }
+  .skeleton {
+    border-radius: var(--radius-sm);
+  }
 }
 
-/* ── Very small phones (≤400px) ────────────────────────── */
-@media (max-width: 400px) {
-  .navbar { padding: 0 8px; }
-  .navbar-brand { font-size: 0.95rem; gap: 6px; }
-  .navbar-brand .logo-icon { width: 26px; height: 26px; }
-  .page-container { padding: 12px 8px; }
-  .stat-value { font-size: 1.2rem; }
-  .group-card { padding: 14px; }
-  .modal { padding: 16px 12px; }
-  .btn { padding: 8px 14px; font-size: 0.8rem; }
-  .theme-toggle { width: 30px; height: 30px; }
+/* ── Extra Small Phones (≤380px) ────────────────────────── */
+@media (max-width: 380px) {
+  .navbar {
+    padding: 0 8px;
+    gap: 4px;
+  }
+  .navbar-brand {
+    font-size: 0.95rem;
+    gap: 6px;
+  }
+  .navbar-brand .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .page-container {
+    padding: 10px 8px 20px;
+  }
+  .stat-value {
+    font-size: 1.3rem;
+  }
+  .group-card {
+    padding: 12px;
+  }
+  .modal {
+    padding: 16px 12px;
+  }
+  .btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  .theme-toggle {
+    width: 30px;
+    height: 30px;
+  }
   .theme-toggle .icon-sun,
-  .theme-toggle .icon-moon { width: 14px; height: 14px; }
+  .theme-toggle .icon-moon {
+    width: 14px;
+    height: 14px;
+  }
+  .filter-pill {
+    padding: 5px 9px;
+    font-size: 0.72rem;
+  }
+  .activity-card {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .settle-mode-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Custom Scrollbars ─────────────────────────────────── */

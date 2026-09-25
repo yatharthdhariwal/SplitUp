@@ -190,11 +190,11 @@ function renderNavbar(activeBack = null) {
         ? `<img src="${avatarUrl}" alt="${escapeHtml(user?.name)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
         : initials;
     const backBtn = activeBack
-        ? `<button class="btn btn-ghost btn-sm" onclick="history.back()">← ${activeBack}</button>`
+        ? `<button class="btn btn-ghost btn-sm nav-back-btn" onclick="history.back()">← <span class="nav-back-text">${activeBack}</span></button>`
         : '';
     return `
     <nav class="navbar">
-      <div style="display:flex;align-items:center;gap:16px">
+      <div class="navbar-left" style="display:flex;align-items:center;gap:10px;min-width:0">
         <a href="dashboard.html" class="navbar-brand">
           <span class="logo-icon"><img src="logo.jpg" alt="SettleUp" style="width:100%;height:100%;object-fit:cover;border-radius:inherit"></span>
           <span class="gradient-text">SettleUp</span>
