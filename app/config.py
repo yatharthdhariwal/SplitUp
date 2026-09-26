@@ -17,7 +17,10 @@ class Config:
     # Override with DATABASE_URL env var to use PostgreSQL or any other DB.
     _basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     _default_db = 'sqlite:///' + os.path.join(_basedir, 'instance', 'splitup.db')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or _default_db
+    _raw_db_url = os.environ.get('DATABASE_URL')
+    if _raw_db_url and _raw_db_url.startswith('postgres://'):
+        _raw_db_url = _raw_db_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _raw_db_url or _default_db
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # suppresses a warning we don't need
 
     # JWT secret key — different from SECRET_KEY intentionally

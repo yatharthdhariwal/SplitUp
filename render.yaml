@@ -20,6 +20,8 @@ services:
         value: production
       - key: FLASK_APP
         value: run.py
+      - key: DATABASE_URL
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: JWT_SECRET_KEY
@@ -30,7 +32,4 @@ services:
         value: "*"
       - key: PYTHON_VERSION
         value: "3.11.9"
-    disk:
-      name: splitup-data
-      mountPath: /opt/render/project/src/instance
-      sizeGB: 1
+
